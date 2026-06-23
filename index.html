@@ -1,0 +1,2341 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>木子澄安診所 — 醫療規劃系統</title>
+<style>
+/* ─── 自訂新增項目 ────────────────────────────────────────────────── */
+.custom-add-card {
+  border-style: dashed !important; justify-content: center; align-items: center;
+  cursor: pointer; flex-direction: column; gap: 6px;
+}
+.custom-add-card:hover { border-color: var(--accent) !important; background: var(--accent-pale) !important; transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.custom-add-input {
+  width: 100%; border: 1.5px solid var(--border); border-radius: 8px;
+  padding: 6px 10px; font-family: inherit; font-size: 13px; color: var(--text);
+  background: var(--surface); outline: none; display: block; margin-bottom: 6px;
+  transition: border-color 0.15s; box-sizing: border-box;
+}
+.custom-add-input:focus { border-color: var(--accent); }
+.custom-add-btn-row { display: flex; gap: 6px; width: 100%; }
+.custom-add-confirm {
+  flex: 1; padding: 6px 0; border-radius: 12px; cursor: pointer;
+  font-size: 12px; font-family: inherit; background: var(--accent); border: none; color: white;
+  transition: background 0.15s;
+}
+.custom-add-confirm:hover { background: var(--accent-light); }
+.custom-add-cancel-btn {
+  flex: 1; padding: 6px 0; border-radius: 12px; cursor: pointer;
+  font-size: 12px; font-family: inherit; background: none;
+  border: 1.5px solid var(--border); color: var(--muted); transition: all 0.15s;
+}
+.custom-add-cancel-btn:hover { border-color: #EF4444; color: #EF4444; }
+
+/* ─── Reset & Variables ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --primary:      #1B3550;
+  --primary-dark: #122540;
+  --accent:       #2B8A9A;
+  --accent-light: #3AAABB;
+  --accent-pale:  #EBF7FA;
+  --ins-color:    #0EA472;
+  --ins-pale:     #ECFDF5;
+  --gold:         #D97706;
+  --gold-pale:    #FFFBEB;
+  --bg:           #F4F6F9;
+  --surface:      #FFFFFF;
+  --text:         #1B2B38;
+  --muted:        #64748B;
+  --border:       #E2E8F0;
+  --shadow-sm:    0 1px 4px rgba(0,0,0,0.07);
+  --shadow-md:    0 4px 18px rgba(0,0,0,0.09);
+  --shadow-lg:    0 10px 36px rgba(0,0,0,0.12);
+  --radius:       16px;
+  --radius-sm:    10px;
+  --ease:         cubic-bezier(0.25,0.46,0.45,0.94);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+               "PingFang TC", "Noto Sans TC", "Microsoft JhengHei",
+               "Helvetica Neue", sans-serif;
+}
+body {
+  background: var(--bg); color: var(--text);
+  height: 100vh; overflow: hidden;
+  display: flex; flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Banner ─────────────────────────────────────────────────────── */
+.banner {
+  flex-shrink: 0; height: calc(68px + 10pt);
+  background: linear-gradient(130deg, var(--primary-dark) 0%, var(--primary) 55%, #1E4D68 100%);
+  display: flex; align-items: center; justify-content: center; padding: 0 calc(370px + 32px) 0 32px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.22);
+  position: relative; z-index: 10;
+}
+.banner-text { text-align: center; margin-top: 10pt; }
+.banner-name { font-size: 22px; font-weight: 700; color: #FFF; letter-spacing: 0.12em; }
+.banner-sub  { font-size: 12px; color: rgba(255,255,255,0.65); letter-spacing: 0.1em; margin-top: 2px; }
+.banner-date { position: absolute; right: 32px; color: rgba(255,255,255,0.42); font-size: 12px; letter-spacing: 0.05em; text-align: right; line-height: 1.6; }
+
+/* ─── Layout ─────────────────────────────────────────────────────── */
+.layout  { flex: 1; display: flex; overflow: hidden; }
+.content { flex: 1; position: relative; overflow: hidden; }
+
+/* ─── Screens ────────────────────────────────────────────────────── */
+.screen {
+  position: absolute; inset: 0;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.28s var(--ease), transform 0.28s var(--ease);
+  transform: translateX(18px);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.screen.active { opacity: 1; pointer-events: all; transform: translateX(0); }
+.screen.exit   { opacity: 0; transform: translateX(-18px); }
+
+/* ─── Home Screen ────────────────────────────────────────────────── */
+#screen-home { overflow: visible; }
+#home-inner  { position: relative; width: 100%; height: 100%; }
+
+/* Hero — 上 1/4 */
+.home-hero {
+  position: absolute; top: 15%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%; max-width: 780px;
+  text-align: center; padding: 0 32px;
+}
+.home-hero-eyebrow {
+  font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 12px; font-weight: 500;
+}
+.home-hero-title { /* ★ 保持原尺寸 */
+  font-size: 44px; font-weight: 300; color: var(--text);
+  letter-spacing: 0.05em; line-height: 1.15;
+}
+.home-hero-title strong { font-weight: 700; color: var(--primary); display: block; }
+
+/* Search bar */
+.search-wrap {
+  position: absolute; top: 33%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%; max-width: 560px; padding: 0 32px;
+  z-index: 9999;
+}
+.search-box {
+  position: relative;
+}
+.search-input {
+  width: 100%; height: 48px;
+  padding: 0 48px 0 20px;
+  border-radius: 24px;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  font-size: 16px; font-family: inherit;
+  color: var(--text);
+  box-shadow: var(--shadow-md);
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+.search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(43,138,154,0.15), var(--shadow-md); }
+.search-icon {
+  position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+  color: var(--muted); pointer-events: none; font-size: 18px;
+}
+.search-clear {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  color: var(--muted); cursor: pointer; font-size: 18px; line-height: 1;
+  display: none; background: none; border: none;
+  padding: 4px; border-radius: 50%;
+  transition: color 0.15s, background 0.15s;
+}
+.search-clear:hover { color: var(--text); background: var(--bg); }
+.search-clear.visible { display: block; }
+.search-icon.hidden  { display: none; }
+
+/* Search results dropdown */
+.search-results {
+  position: absolute;
+  top: calc(100% + 4px); left: 0; right: 0;
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(226,232,240,0.8);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.13);
+  max-height: 220px; overflow-y: auto;
+  z-index: 9999;
+  display: none;
+}
+.search-results.open { display: block; }
+.search-result-item.kb-active { background: var(--accent-pale); }
+.search-results::-webkit-scrollbar { width: 4px; }
+.search-results::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.search-result-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s;
+}
+.search-result-item:last-child { border-bottom: none; }
+.search-result-item:hover { background: var(--accent-pale); }
+/* item 圓角由 parent overflow:hidden+border-radius 統一處理 */
+
+.sr-cat-badge {
+  font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 10px;
+  background: var(--accent-pale); color: var(--accent);
+  white-space: nowrap; flex-shrink: 0; letter-spacing: 0.04em;
+}
+.sr-name  { font-size: 15px; font-weight: 600; color: var(--text); flex: 1; }
+.sr-desc  { font-size: 12px; color: var(--muted); flex: 2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sr-price { font-size: 14px; font-weight: 700; color: var(--primary); white-space: nowrap; margin-left: auto; }
+.search-empty {
+  padding: 20px 16px; text-align: center;
+  font-size: 14px; color: var(--muted);
+}
+
+/* Cat grid — 正中央 */
+.cat-grid-wrap {
+  position: absolute; top: 60%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 80px); max-width: 880px;
+}
+.cat-grid {
+  display: grid; grid-template-columns: repeat(5,1fr); gap: 18px; width: 100%;
+  padding-top: 8px;
+}
+.cat-card {
+  background: var(--surface); border-radius: var(--radius);
+  padding: 26px 12px 22px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  cursor: pointer; border: 1.5px solid var(--border); box-shadow: var(--shadow-sm);
+  transition: transform 0.22s var(--ease), box-shadow 0.22s var(--ease), border-color 0.22s var(--ease);
+  user-select: none; -webkit-user-select: none;
+}
+.cat-card:hover  { transform: translateY(-5px); box-shadow: var(--shadow-lg); border-color: var(--accent); }
+.cat-card:active { transform: translateY(-2px); }
+.cat-icon {
+  width: 64px; height: 64px; border-radius: 18px;
+  background: #EEF3F7; border: 1.5px solid #D8E4EC;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.22s var(--ease), background 0.22s var(--ease);
+}
+.cat-icon svg { width: 36px; height: 36px; }
+.cat-card:hover .cat-icon { transform: scale(1.07); background: #E3EDF5; }
+.cat-label       { font-size: 20px; font-weight: 600; color: var(--text); letter-spacing: 0.04em; }
+.cat-count-badge { font-size: 13px; color: var(--muted); background: var(--bg); padding: 2px 10px; border-radius: 12px; border: 1px solid var(--border); }
+
+/* ─── Category Screen ────────────────────────────────────────────── */
+#screen-category { padding: 20px 28px 28px; overflow: hidden; }
+.screen-nav { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; flex-shrink: 0; }
+.back-btn {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 18px 7px 14px;
+  background: var(--surface); border: 1.5px solid var(--border); border-radius: 20px;
+  cursor: pointer; font-size: 15px; color: var(--muted); font-family: inherit;
+  transition: all 0.18s var(--ease); letter-spacing: 0.02em;
+}
+.back-btn:hover { background: var(--accent-pale); border-color: var(--accent); color: var(--accent); }
+.back-arrow { font-size: 16px; }
+.screen-heading { display: flex; align-items: center; gap: 10px; }
+.screen-cat-icon { font-size: 28px; line-height: 1; }
+.screen-title { font-size: 24px; font-weight: 600; color: var(--text); letter-spacing: 0.04em; } /* ★ 保持 */
+.screen-desc  { font-size: 15px; color: var(--muted); margin-top: 2px; }
+
+
+.items-scroll { flex: 1; overflow-y: auto; padding-right: 4px; padding-top: 8px; }
+.items-scroll::-webkit-scrollbar { width: 4px; }
+.items-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.items-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap: 12px; padding-bottom: 8px; }
+.items-section-header {
+  grid-column: 1 / -1; padding: 14px 8px 6px; margin-top: 10px;
+  font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--primary); border-bottom: 2px solid rgba(43,138,154,0.3);
+}
+.items-section-header:first-child { margin-top: 0; }
+.items-section-header.combo-section { color: var(--accent); }
+
+/* Item Card */
+.item-card {
+  background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius);
+  padding: 16px 14px 14px; cursor: pointer;
+  display: flex; flex-direction: column; min-height: 110px;
+  transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease),
+              border-color 0.18s var(--ease), background 0.18s var(--ease);
+  box-shadow: var(--shadow-sm); position: relative;
+  user-select: none; -webkit-user-select: none;
+}
+.item-card:hover:not(.selected):not(.ins-mode) { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: #94C6CF; }
+.item-card.selected  { border-color: var(--accent); background: var(--accent-pale); box-shadow: 0 0 0 1px var(--accent), var(--shadow-md); transform: translateY(-1px); }
+.item-card.ins-mode  { border-color: var(--ins-color); background: var(--ins-pale); box-shadow: 0 0 0 1px var(--ins-color), var(--shadow-md); transform: translateY(-1px); }
+
+/* Search highlight flash */
+@keyframes highlightFlash {
+  0%,100% { box-shadow: 0 0 0 3px var(--accent), var(--shadow-lg); }
+  50%     { box-shadow: 0 0 0 7px rgba(43,138,154,0.25), var(--shadow-lg); transform: scale(1.02); }
+}
+.highlight-flash { animation: highlightFlash 0.55s ease 3 !important; border-color: var(--accent) !important; }
+
+.mode-badge {
+  position: absolute; top: 10px; right: 10px;
+  font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 10px; letter-spacing: 0.04em;
+}
+.mode-badge.self { background: rgba(43,138,154,0.12); color: var(--accent); }
+.mode-badge.ins  { background: rgba(14,164,114,0.12); color: var(--ins-color); }
+
+.item-name { font-size: 16px; font-weight: 600; color: var(--text); line-height: 1.4; padding-right: 46px; margin-bottom: 5px; word-break: keep-all; overflow-wrap: break-word; }
+.item-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 12px; word-break: keep-all; overflow-wrap: break-word; }
+.item-price-row { display: flex; align-items: baseline; gap: 3px; margin-top: auto; padding-top: 8px; padding-right: 30px; }
+.price-currency { font-size: 13px; color: var(--muted); font-weight: 500; }
+.price-val      { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: var(--primary); line-height: 1; }
+.price-val.ins-price { color: var(--ins-color); font-size: 16px; }
+.price-val.tbd       { color: var(--muted); font-size: 13px; font-weight: 500; } /* ★ 保持 */
+
+/* Notes indicator — hidden, tooltip still works on hover */
+.notes-hint { display: none; }
+
+.check-dot {
+  position: absolute; bottom: 12px; right: 12px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent); color: white;
+  display: flex; align-items: center; justify-content: center; font-size: 11px;
+  opacity: 0; transform: scale(0.4);
+  transition: opacity 0.18s var(--ease), transform 0.22s var(--ease);
+}
+.item-card.selected  .check-dot { opacity: 1; transform: scale(1); }
+.item-card.ins-mode  .check-dot { opacity: 1; transform: scale(1); background: var(--ins-color); }
+
+/* ─── Tooltip ────────────────────────────────────────────────────── */
+.tooltip-popup {
+  position: fixed; z-index: 9999;
+  background: #1B2B38; color: #EFF6FF;
+  padding: 12px 16px; border-radius: 12px;
+  font-size: 13px; line-height: 1.7;
+  max-width: 290px; max-height: 320px; overflow-y: auto;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.28);
+  pointer-events: none;
+  opacity: 0; transition: opacity 0.18s;
+}
+.tooltip-popup.visible { opacity: 1; }
+.tooltip-popup::-webkit-scrollbar { width: 3px; }
+.tooltip-popup::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); }
+.tooltip-title { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.45); margin-bottom: 8px; }
+.tooltip-line  { display: flex; align-items: flex-start; gap: 6px; padding: 1px 0; }
+.tooltip-bullet { color: var(--accent-light); flex-shrink: 0; margin-top: 2px; }
+
+/* ─── Pricing Panel ──────────────────────────────────────────────── */
+.pricing-panel {
+  width: 370px; flex-shrink: 0;
+  background: var(--surface); border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  box-shadow: -4px 0 24px rgba(0,0,0,0.05);
+}
+.panel-head {
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0; display: flex; flex-direction: column;
+}
+.panel-head-title { font-size: 17px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 7px; }
+.cart-count { background: var(--accent); color: white; font-size: 13px; font-weight: 700; padding: 1px 8px; border-radius: 12px; min-width: 24px; text-align: center; transition: background 0.2s; }
+.cart-count.zero { background: var(--border); color: var(--muted); }
+.panel-legend { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.legend-item  { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); }
+.legend-dot   { width: 8px; height: 8px; border-radius: 50%; }
+
+.panel-body { flex: 1; overflow-y: auto; padding: 12px 14px; scroll-behavior: smooth; }
+.panel-body::-webkit-scrollbar { width: 4px; }
+.panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.empty-state { text-align: center; padding: 52px 20px; opacity: 0; animation: fadeIn 0.4s var(--ease) 0.1s forwards; }
+@keyframes fadeIn { to { opacity: 1; } }
+.empty-icon { font-size: 36px; margin-bottom: 12px; filter: grayscale(0.4); opacity: 0.5; }
+.empty-text { font-size: 15px; color: var(--muted); line-height: 1.7; }
+
+.cart-item {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 11px 12px; margin-bottom: 7px;
+  display: flex; align-items: flex-start; gap: 8px;
+  animation: slideUp 0.2s var(--ease);
+}
+@keyframes slideUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+.cart-item-body { flex: 1; min-width: 0; }
+.cart-item-name { font-size: 15px; font-weight: 600; color: var(--text); white-space: normal; word-break: break-word; margin-bottom: 3px; }
+.cart-item-meta { display: flex; align-items: center; gap: 5px; }
+.cart-badge { font-size: 11.5px; font-weight: 700; padding: 1px 7px; border-radius: 8px; letter-spacing: 0.04em; }
+.cart-badge.self { background: rgba(43,138,154,0.1); color: var(--accent); }
+.cart-badge.ins  { background: rgba(14,164,114,0.1); color: var(--ins-color); }
+.cart-item-cat   { font-size: 12px; color: var(--muted); }
+
+/* Editable price */
+.cart-price-wrap {
+  display: flex; flex-direction: column; align-items: flex-end;
+  gap: 2px; flex-shrink: 0; align-self: center;
+}
+.cart-item-price {
+  font-size: 17px; font-weight: 700; color: var(--primary);
+  white-space: nowrap; cursor: pointer; border-radius: 6px;
+  padding: 2px 6px; transition: background 0.15s;
+}
+.cart-item-price:hover:not(.ins-p):not(.tbd) { background: rgba(43,138,154,0.1); }
+.cart-item-price.ins-p { color: var(--ins-color); cursor: default; }
+.cart-item-price.tbd   { color: var(--muted); font-size: 13px; font-weight: 500; cursor: pointer; }
+.cart-item-price.edited { color: var(--gold); }
+.price-edit-hint { font-size: 10px; color: var(--muted); opacity: 0.6; display: none; }
+.cart-item:hover .price-edit-hint:not(.ins-hint) { display: block; }
+.price-edit-input {
+  width: 80px; font-size: 17px; font-weight: 700; color: var(--primary);
+  border: none; border-bottom: 2px solid var(--accent);
+  background: transparent; font-family: inherit; text-align: right;
+  outline: none; padding: 0 4px;
+}
+
+.cart-remove-btn {
+  background: none; border: none; cursor: pointer; color: var(--muted);
+  padding: 4px 5px; border-radius: 6px; font-size: 16px; line-height: 1;
+  transition: color 0.15s, background 0.15s; flex-shrink: 0; align-self: flex-start;
+}
+.cart-remove-btn:hover { color: #EF4444; background: #FEF2F2; }
+
+.cart-group-label { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 8px 4px 4px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
+
+.discount-block { margin: 8px 0; padding: 8px 14px; background: var(--gold-pale); border: 1px solid #F6D860; border-radius: var(--radius-sm); animation: slideUp 0.2s var(--ease); }
+.discount-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 5px 0; border-top: 1px solid rgba(246,216,96,0.4); }
+.discount-row:first-child { border-top: none; }
+.discount-name { font-size: 14px; color: #92400E; flex: 1; line-height: 1.4; }
+.discount-amt  { font-size: 15px; font-weight: 700; color: var(--gold); white-space: nowrap; cursor: pointer; border-radius: 4px; padding: 1px 5px; transition: background 0.15s; }
+.discount-amt:hover { background: rgba(217,119,6,0.1); }
+.discount-remove-btn {
+  background: none; border: none; cursor: pointer;
+  color: #92400E; opacity: 0.45; font-size: 15px; line-height: 1;
+  padding: 2px 4px; border-radius: 4px; margin-left: 4px; flex-shrink: 0;
+  transition: opacity 0.15s, background 0.15s;
+}
+.discount-remove-btn:hover { opacity: 1; background: rgba(217,119,6,0.12); }
+
+/* Panel Footer */
+.panel-foot { padding: 14px 20px 18px; border-top: 1px solid var(--border); flex-shrink: 0; }
+.sub-total-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.sub-label { font-size: 14px; color: var(--muted); }
+.sub-value { font-size: 14px; font-weight: 600; color: var(--text); }
+.divider   { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
+.grand-row { display: flex; justify-content: space-between; align-items: center; }
+.grand-label { font-size: 17px; font-weight: 600; color: var(--text); }
+.grand-value-wrap { display: flex; align-items: baseline; gap: 3px; }
+.grand-currency { font-size: 15px; color: var(--muted); font-weight: 500; }
+.grand-value { font-size: 32px; font-weight: 700; color: var(--primary); letter-spacing: -0.03em; line-height: 1; transition: color 0.2s, background 0.15s; cursor: pointer; border-radius: 6px; padding: 2px 6px; }
+#grandTotal:hover { background: rgba(27,53,80,0.08); }
+.action-row { display: flex; gap: 8px; margin-top: 14px; }
+
+/* ─── 已付金額 ──────────────────────────────────────────────────── */
+.paid-toggle {
+  background: none; border: none; cursor: pointer;
+  color: var(--gold); font-size: 10px; padding: 0 0 0 5px;
+  line-height: 1; transition: transform 0.2s; display: inline-block;
+  vertical-align: middle;
+}
+.paid-toggle.open { transform: rotate(90deg); }
+.paid-display {
+  font-size: 14px; font-weight: 600; color: var(--gold);
+  cursor: pointer; border-radius: 4px; padding: 1px 5px;
+  transition: background 0.15s;
+}
+.paid-display:hover { background: rgba(217,119,6,0.08); }
+.paid-display.edited { opacity: 0.85; }
+.btn-clear, .btn-print {
+  flex: 1; padding: 10px; border-radius: 20px; cursor: pointer;
+  font-size: 14px; font-family: inherit; letter-spacing: 0.02em; transition: all 0.18s var(--ease);
+}
+.btn-clear { background: none; border: 1.5px solid var(--border); color: var(--muted); }
+.btn-clear:hover { border-color: #EF4444; color: #EF4444; background: #FEF2F2; }
+.btn-print { background: var(--primary); border: none; color: white; }
+.btn-print:hover { background: var(--accent); }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 22px; left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  background: var(--primary); color: white;
+  padding: 9px 22px; border-radius: 22px;
+  font-size: 15px; box-shadow: var(--shadow-lg);
+  opacity: 0; transition: opacity 0.25s, transform 0.25s var(--ease);
+  pointer-events: none; z-index: 999; white-space: nowrap; letter-spacing: 0.02em;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ─── Patient Name Input ────────────────────────────────────────── */
+.patient-name-row {
+  padding: 12px 22px 8px;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 6px;
+}
+.patient-name-input {
+  flex: 1; height: 34px; padding: 0 14px;
+  border: 1.5px solid var(--border); border-radius: 20px;
+  font-family: inherit; font-size: 14px; color: var(--text);
+  background: var(--bg); outline: none;
+  transition: border-color 0.18s, background 0.18s;
+}
+.patient-name-input:focus { border-color: var(--accent); background: var(--surface); }
+.patient-name-input::placeholder { color: var(--muted); font-size: 13px; }
+.patient-greeting-label { font-size: 15px; color: var(--muted); white-space: nowrap; }
+.panel-head-inner { display: flex; align-items: center; padding: 8px 22px 14px; gap: 8px; }
+.panel-head-inner .panel-head-title { flex: 1; }
+
+/* ─── Letter Parts (print only) ─────────────────────────────────── */
+.letter-part { display: none; }
+
+
+/* ─── Endo Tree Navigation ───────────────────────────────── */
+.endo-breadcrumb-bar {
+  grid-column: 1 / -1; display: flex; align-items: center; gap: 10px;
+  padding: 8px 4px 10px; margin-bottom: 4px;
+  border-bottom: 2px solid rgba(43,138,154,0.3);
+  flex-wrap: wrap;
+}
+.endo-back-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 14px 5px 10px; flex-shrink: 0;
+  background: var(--surface); border: 1.5px solid var(--border); border-radius: 16px;
+  cursor: pointer; font-size: 14px; color: var(--muted); font-family: inherit;
+  transition: all 0.18s var(--ease);
+}
+.endo-back-btn:hover { background: var(--accent-pale); border-color: var(--accent); color: var(--accent); }
+.endo-crumbs { font-size: 13px; color: var(--muted); line-height: 1.5; flex: 1; }
+.endo-crumb-name { color: var(--accent); font-weight: 600; }
+.item-card.endo-nav { border-color: var(--accent-light); }
+.item-card.endo-nav .mode-badge { background: rgba(43,138,154,0.1); color: var(--accent); }
+.endo-nav-arrow { font-size: 22px; color: var(--accent); font-weight: 200; line-height: 1; }
+/* ─── Endo 橘色選取 & 淡化 ──────────────────────────────────────── */
+.item-card.endo-open {
+  border-color: #BC7F30 !important;
+  background: #FEF6E8 !important;
+  box-shadow: 0 0 0 1px #BC7F30, var(--shadow-md) !important;
+}
+.item-card.endo-open .mode-badge { background: rgba(188,127,48,0.12) !important; color: #BC7F30 !important; }
+.item-card.endo-open .endo-nav-arrow { color: #BC7F30 !important; }
+.item-card.endo-ins {
+  border-color: var(--ins-color) !important;
+  background: var(--ins-pale) !important;
+  box-shadow: 0 0 0 1px var(--ins-color), var(--shadow-md) !important;
+}
+.item-card.endo-ins .mode-badge { background: rgba(14,164,114,0.12) !important; color: var(--ins-color) !important; }
+.item-card.endo-dimmed {
+  opacity: 0.22; pointer-events: auto;
+  transform: none !important; box-shadow: var(--shadow-sm) !important;
+}
+.item-card.endo-dimmed:hover { opacity: 0.5; }
+.endo-sub-row .item-card.selected {
+  border-color: #BC7F30 !important;
+  background: #FEF6E8 !important;
+  box-shadow: 0 0 0 1px #BC7F30, var(--shadow-md) !important;
+}
+.endo-sub-row .item-card.selected .mode-badge { background: rgba(188,127,48,0.12) !important; color: #BC7F30 !important; }
+.endo-sub-row .item-card.selected .endo-nav-arrow { color: #BC7F30 !important; }
+.endo-sub-row.l3 .item-card.selected {
+  border-color: #BC7F30 !important;
+  background: #FEF6E8 !important;
+}
+.endo-sub-row.l3 .item-card.selected .check-dot { background: #BC7F30 !important; }
+
+
+.endo-path-bar {
+  grid-column: 1 / -1; font-size: 13px; font-weight: 600; color: var(--accent);
+  padding: 4px 0 8px; letter-spacing: 0.04em;
+  border-bottom: 2px solid rgba(43,138,154,0.2); margin-bottom: 8px;
+}
+.endo-sub-row {
+  grid-column: 1 / -1; background: var(--accent-pale);
+  border-radius: var(--radius-sm); padding: 10px 10px 8px; margin-bottom: 2px;
+}
+.endo-sub-row.l3 { background: rgba(14,164,114,0.06); }
+.endo-sub-grid {
+  display: grid; grid-template-columns: repeat(auto-fill,minmax(170px,1fr)); gap: 8px;
+}
+
+.endo-base-note { font-size: 12px; color: var(--muted); margin-top: 3px; word-break: keep-all; overflow-wrap: break-word; }
+
+/* ─── Print ──────────────────────────────────────────────────────── */
+@page { margin: 0; size: A4; }
+
+.cart-note-input {
+  width: 100%; border: none; border-bottom: 1px dashed var(--border);
+  background: transparent; font-family: inherit; font-size: 12px; color: var(--muted);
+  resize: none; padding: 3px 2px; margin-top: 5px; outline: none; line-height: 1.5;
+  transition: border-color 0.15s;
+}
+.cart-note-input:focus { border-bottom-color: var(--accent); }
+.cart-note-input::placeholder { color: var(--border); font-size: 11.5px; }
+
+.cart-custom-note-print { display: none; }
+
+.cart-notes-print { display: none; }
+
+@media print {
+  /* block 流排：避免 flex+100vh 撐滿第一頁 */
+  body {
+    display: block !important;
+    height: auto !important; overflow: visible !important;
+    padding: 0 !important;
+    background: white !important;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+
+  /* Banner */
+  .banner {
+    display: flex !important; justify-content: center !important;
+    height: auto !important; padding: 10px 20px !important;
+    background: #EEF3F7 !important;
+    box-shadow: none !important; border-bottom: 2px solid #1B3550;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    page-break-after: avoid; break-after: avoid;
+    position: relative !important;
+  }
+  .banner-name  { color: #1B2B38 !important; }
+  .banner-sub   { color: #64748B !important; }
+  .banner-date  { position: absolute !important; right: 20px !important; color: #64748B !important; }
+  .bd-time      { display: none !important; }
+
+  /* 說明信件 */
+  .letter-part {
+    display: block !important;
+    font-family: "標楷體", "DFKai-SB", "BiauKai", serif !important;
+    font-size: 13.5px; line-height: 2.2; color: #1B2B38;
+  }
+  .letter-intro { padding: 6mm 18mm 6mm; }
+  .letter-close { padding: 0 18mm 4mm; line-height: 1.7 !important; }
+  .letter-greeting { font-size: 19.7px; margin-bottom: 2px; }
+  .letter-remark { margin: 0; }
+  .letter-remark p { margin: 0; line-height: 1.7; }
+  .letter-contact { margin: 1px 0 0; }
+  .letter-sign { text-align: right; margin-top: 4px; }
+
+  /* 隱藏互動元素 */
+  .content, .action-row, .interaction-hint, .toast,
+  .search-wrap, .back-btn, .panel-legend,
+  .tooltip-popup { display: none !important; }
+
+  /* layout：縮小上間距（單行距離） */
+  .layout {
+    display: block !important;
+    height: auto !important; overflow: visible !important;
+    padding: 0 18mm 7mm;
+  }
+  .pricing-panel {
+    display: block !important;
+    width: 100% !important; border: none !important;
+    box-shadow: none !important;
+    height: auto !important; overflow: visible !important;
+  }
+  .panel-head { display: none !important; }
+  .panel-body { overflow: visible !important; height: auto !important; max-height: none !important; padding-top: 0 !important; }
+  .panel-foot { page-break-before: avoid; break-before: avoid; padding-bottom: 4px !important; }
+
+  /* 折扣區塊：列印縮小高度，隱藏 X 按鈕 */
+  .discount-block { margin: 3px 0 !important; padding: 4px 14px !important; }
+  .discount-row   { padding: 2px 0 !important; }
+  .discount-remove-btn { display: none !important; }
+
+  /* 隱藏分段標題（健檢、檢驗、檢查…等） */
+  .cart-group-label { display: none !important; }
+
+  /* Cart item：名稱 + 付費狀態 同一列 */
+  .cart-item {
+    padding: 6px 2px !important;
+    border: none !important;
+    border-bottom: 1px solid #E8EDF2 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    margin-bottom: 0 !important;
+    animation: none !important;
+    align-items: flex-start !important;
+  }
+  .cart-item-body {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+  .cart-item-name {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    margin-bottom: 0 !important;
+    font-size: 13px !important;
+    flex-shrink: 0 !important;
+  }
+  .cart-item-meta {
+    flex-shrink: 0 !important;
+  }
+  .cart-price-wrap { align-self: flex-start !important; }
+  .cart-item-price { font-size: 13px !important; }
+  .cart-item-price:hover { background: transparent !important; }
+  .cart-remove-btn  { display: none !important; }
+  .price-edit-hint  { display: none !important; }
+
+  /* 備註：緊接項目下方，去掉「包含項目」標題 */
+  .cart-notes-print {
+    display: block !important;
+    flex-basis: 100% !important;
+    margin: 3px 0 4px 0 !important;
+    padding: 3px 0 3px 10px !important;
+    background: transparent !important;
+    border: none !important;
+    border-left: 2px solid #CBD5E1 !important;
+    border-radius: 0 !important;
+    font-size: 10.5px !important; color: #64748B !important; line-height: 1.65 !important;
+  }
+  .cart-notes-print-title { display: none !important; }
+  .cart-note-input { display: none !important; }
+  .cart-custom-note-print {
+    display: inline !important;
+    font-size: 11px !important; color: #475569 !important;
+    margin-left: 6px !important;
+  }
+  #endoNote { display: none !important; }
+  #endoNote.active { display: block !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- Banner -->
+<header class="banner">
+  <div class="banner-text">
+    <div class="banner-name">木子澄安診所</div>
+    <div class="banner-sub">醫療費用說明</div>
+  </div>
+  <div class="banner-date" id="bannerDate"></div>
+</header>
+
+<!-- ── 說明信件（列印用，螢幕隱藏）─────────────────── -->
+<div id="letterIntro" class="letter-part letter-intro">
+  <p class="letter-greeting"><span id="letterPatientName">___</span> 您好：</p>
+  <p class="letter-body">感謝您對木子澄安診所的信任，依您目前需求與醫療評估結果，提供以下醫療內容與費用說明：</p>
+</div>
+
+<div class="layout">
+  <div class="content">
+
+    <!-- Home Screen -->
+    <div class="screen active" id="screen-home">
+      <div id="home-inner">
+
+        <!-- 標題（上 1/4） -->
+        <div class="home-hero">
+          <div class="home-hero-eyebrow">Personal Medical Planning</div>
+          <div class="home-hero-title">訂製您的<strong>個人醫療</strong></div>
+        </div>
+
+        <!-- 搜尋列 -->
+        <div class="search-wrap">
+          <div class="search-box">
+            <input class="search-input" id="searchInput" type="text"
+                   placeholder="搜尋"
+                   autocomplete="off" spellcheck="false">
+            <span class="search-icon" id="searchIcon">🔍</span>
+            <button class="search-clear" id="searchClear" title="清除">✕</button>
+            <div class="search-results" id="searchResults"></div>
+          </div>
+        </div>
+
+        <!-- 五大選單（正中央） -->
+        <div class="cat-grid-wrap">
+          <div class="cat-grid" id="catGrid"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Category Screen -->
+    <div class="screen" id="screen-category">
+      <div class="screen-nav">
+        <button class="back-btn" id="backBtn"><span class="back-arrow">‹</span> 返回選單</button>
+        <div class="screen-heading">
+          <span class="screen-cat-icon" id="catIconEl"></span>
+          <div>
+            <div class="screen-title" id="catTitleEl"></div>
+            <div class="screen-desc"  id="catDescEl"></div>
+          </div>
+        </div>
+      </div>
+      <div class="items-scroll">
+        <div class="items-grid" id="itemsGrid"></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- Pricing Panel -->
+  <aside class="pricing-panel">
+    <div class="panel-head">
+      <div class="patient-name-row">
+        <input type="text" id="patientNameInput" class="patient-name-input"
+               placeholder="請輸入稱謂（例：林先生）" autocomplete="off">
+        <span class="patient-greeting-label">您好</span>
+      </div>
+      <div class="panel-head-inner">
+        <div class="panel-head-title">📋 費用清單 <span class="cart-count zero" id="cartCount">0</span></div>
+        <div class="panel-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>自費</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--ins-color)"></div>免自費</div>
+          <div class="legend-item" style="font-size:11px;opacity:.6;margin-left:4px">右鍵切換</div>
+        </div>
+      </div>
+    </div>
+    <div class="panel-body" id="panelBody">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">🗒️</div>
+        <div class="empty-text">尚未選取任何項目<br>請從左側選擇檢查或治療項目</div>
+      </div>
+      <div id="cartList"></div>
+      <div id="discountBlock"></div>
+    </div>
+    <div class="panel-foot">
+      <div class="sub-total-row"><span class="sub-label">自費小計</span><span class="sub-value" id="selfTotal">NT$ 0</span></div>
+      <div class="sub-total-row"><span class="sub-label">免自費項目</span><span class="sub-value" style="color:var(--ins-color)" id="insCount">0 項</span></div>
+      <div class="sub-total-row">
+        <span class="sub-label">優惠折扣<button class="paid-toggle" id="paidToggle" title="已付金額">&#9654;</button></span>
+        <span class="sub-value" style="color:var(--gold)" id="discountTotal">— NT$ 0</span>
+      </div>
+      <div class="sub-total-row" id="paidRow" style="display:none">
+        <span class="sub-label" style="color:var(--gold)">已付金額</span>
+        <div class="cart-price-wrap">
+          <span class="paid-display" id="paidDisplay">— NT$ 0</span>
+          <span class="price-edit-hint" style="color:var(--gold);opacity:0.6">點擊修改金額</span>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="grand-row">
+        <span class="grand-label">應收總額</span>
+        <div class="grand-value-wrap">
+          <span class="grand-currency">NT$</span>
+          <span class="grand-value" id="grandTotal">0</span>
+        </div>
+      </div>
+      <div class="action-row">
+        <button class="btn-clear" id="btnClear">清除全部</button>
+        <button class="btn-print" onclick="window.print()">列印清單</button>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- ── 說明信件結尾（列印用，螢幕隱藏）────────────── -->
+<div id="letterClose" class="letter-part letter-close">
+  <div class="letter-remark">
+    <p>備註：</p>
+    <p>※ 實際醫療內容將依醫師診察與檢查結果調整，如有額外必要醫療處置，將事前充分說明。</p>
+    <p id="endoNote">※ 此為內視鏡預估費用，如檢查過程中發現出血或內視鏡處置高風險病灶時，<br>醫師會依臨床需求使用注射針以及止血藥物(1500元)、止血夾(1000元/每支)</p>
+  </div>
+  <p class="letter-contact">若您有任何問題，歡迎與我們聯繫。</p>
+  <p class="letter-sign">木子澄安診所 敬上</p>
+</div>
+
+<!-- Tooltip -->
+<div class="tooltip-popup" id="tooltipPopup"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   SVG ICONS
+   ═══════════════════════════════════════════════════════════════════ */
+const ICONS = {
+  'health-check': `<svg viewBox="0 0 28 28" fill="none">
+    <rect x="4.5" y="4" width="19" height="22" rx="2.5" stroke="#1B3550" stroke-width="1.6"/>
+    <path d="M10 4V3a1.2 1.2 0 011.2-1.2h5.6A1.2 1.2 0 0118 3v1" stroke="#1B3550" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M7 16.5h2.8l2-5 3.2 9 2-4H21" stroke="#1B3550" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`,
+  'lab': `<svg viewBox="0 0 28 28" fill="none">
+    <path d="M10.5 4h7" stroke="#1B3550" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M12 4v8.5L6.2 20.2A2.3 2.3 0 008.3 24h11.4a2.3 2.3 0 002.1-3.8L16 12.5V4" stroke="#1B3550" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="10.5" cy="19.5" r="1.1" fill="#1B3550"/>
+    <circle cx="15.5" cy="21.5" r="1.1" fill="#1B3550"/>
+    <circle cx="13"   cy="17.5" r=".8"  fill="#1B3550"/>
+  </svg>`,
+  'exam': `<svg viewBox="0 0 28 28" fill="none">
+    <circle cx="12" cy="11" r="7" stroke="#1B3550" stroke-width="1.6"/>
+    <line x1="17" y1="16" x2="23.5" y2="22.5" stroke="#1B3550" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="9"  y1="11" x2="15"  y2="11"   stroke="#1B3550" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="12" y1="8"  x2="12"  y2="14"   stroke="#1B3550" stroke-width="1.5" stroke-linecap="round"/>
+  </svg>`,
+  'endo': `<svg viewBox="0 0 34 28" fill="none">
+    <rect x="1.5" y="5" width="31" height="16" rx="2.5" stroke="#1B3550" stroke-width="1.6"/>
+    <line x1="1.5" y1="9" x2="32.5" y2="9" stroke="#1B3550" stroke-width="0.7" opacity="0.25"/>
+    <rect x="4.5" y="11.5" width="10" height="6.5" rx="1.2" stroke="#1B3550" stroke-width="1.3"/>
+    <path d="M5.8 15h1.8l1.2-2.5 1.8 5 1.2-2.5h1.5" stroke="#1B3550" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="18" y1="6" x2="18" y2="21" stroke="#1B3550" stroke-width="0.7" opacity="0.2"/>
+    <circle cx="25" cy="15" r="3.5" stroke="#1B3550" stroke-width="1.4"/>
+    <circle cx="25" cy="15" r="1"   fill="#1B3550"/>
+    <circle cx="21" cy="11.5" r="1" fill="#1B3550" opacity="0.5"/>
+    <circle cx="21" cy="14.5" r="1" fill="#1B3550" opacity="0.5"/>
+    <circle cx="21" cy="17.5" r="1" fill="#1B3550" opacity="0.5"/>
+    <line   x1="12.5" y1="21" x2="12.5" y2="25.5" stroke="#1B3550" stroke-width="1.5" stroke-linecap="round"/>
+    <ellipse cx="12.5" cy="26.5" rx="3" ry="1.2" stroke="#1B3550" stroke-width="1.3"/>
+  </svg>`,
+  'drip': `<svg viewBox="0 0 28 32" fill="none">
+    <path d="M14 4L14 1.5Q14 0 15.5 0Q17 0 17 1.5" stroke="#1B3550" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    <path d="M8.5 4.5Q6 4.5 6 8L6 18.5Q6 24 14 24Q22 24 22 18.5L22 8Q22 4.5 19.5 4.5Z" stroke="#1B3550" stroke-width="1.6"/>
+    <line x1="7.5" y1="14.5" x2="20.5" y2="14.5" stroke="#1B3550" stroke-width="1" stroke-dasharray="2.5 2" opacity="0.35"/>
+    <line x1="14" y1="24" x2="14" y2="29.5" stroke="#1B3550" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M11.8 30Q14 27.5 16.2 30Q16.2 33 14 33Q11.8 33 11.8 30Z" fill="#1B3550" opacity="0.4"/>
+  </svg>`,
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   NOTES LOOKUP (備註，僅 tooltip 與列印使用)
+   ═══════════════════════════════════════════════════════════════════ */
+const ITEM_NOTES = {
+  hc1:`AC sugar, HbA1, HOMA-IR\nAST, ALT\nBUN, Cr, uric acid\nTC, TG, HDL, LDL\nTSH, free T4\nUrine routine\n腹部超音波、甲狀腺超音波\nTANITA身體組成`,
+  hc2:`AC sugar, HbA1, HOMA-IR\nAST, ALT\nBUN, Cr, uric acid\nTC, TG, HDL, LDL, Lipoprotein(a)\nTSH, free T4\nUrine routine\n心電圖\n腹部超音波、甲狀腺超音波、頸動脈超音波\nTANITA身體組成`,
+  hc3:`AC sugar, HbA1, HOMA-IR\nAST, ALT\nBUN, Cr, uric acid\nTC, TG, HDL, LDL, Lipoprotein(a)\nTSH, free T4\n11項癌指標檢驗\nUrine routine\n心電圖\n腹部超音波、甲狀腺超音波、頸動脈超音波\nTANITA身體組成`,
+  hc4:`AC sugar, HbA1, HOMA-IR\nAST, ALT\nBUN, Cr, uric acid\nTC, TG, HDL, LDL, Lipoprotein(a)\nTSH, free T4\n11項癌指標檢驗\nUrine routine\n心電圖\n腹部超音波、甲狀腺超音波、頸動脈超音波\nTANITA身體組成\n麻醉腸胃鏡`,
+  hc5:`AC sugar, HbA1, HOMA-IR\nAST, ALT\nBUN, Cr, uric acid\nTC, TG, HDL, LDL, Lipoprotein(a)\nTSH, free T4\n11項癌指標檢驗\nUrine routine\n心電圖\n腹部超音波、甲狀腺超音波、頸動脈超音波\nTANITA身體組成\n麻醉腸胃鏡\n低劑量肺部電腦斷層檢查`,
+  lb01:`(H14 + UR)
+AC sugar
+AST, ALT
+BUN, Cr, uric acid
+TC, TG, HDL, LDL
++ Urine routine`,
+  lb02:`(H07)
+CBC/DC 
+AC sugar, HbA1c
+AST, ALT
+BUN, Cr, uric acid
+TC, TG, HDL, LDL, TC/HDL ratio
+urine routine`,
+  lb03:`(MAB)
+CBC/DC
+AC sugar, HbA1c
+AST, ALT, bilirubin-t/d, ALK-P, r-GT, alb, globulin, TP, amylase
+BUN, Cr, uric acid
+TC, TG, HDL, LDL, TC/HDL ratio
+urine routine`,
+  lb04:`(MAA)
+CBC/DC
+AC sugar, HbA1c
+AST, ALT, HBsAg, anti-HBs, anti-HCV
+BUN, Cr, uric acid
+TC, TG, HDL, LDL, TC/HDL ratio
+urine routine`,
+  lb05:`(H20)
+HBsAg, anti-HBs, anti-HCV`,
+  lb06:`(MAS)
+AC sugar, HbA1, HOMA-IR
+AST, ALT
+BUN, Cr, uric acid
+TC, TG, HDL, LDL
+TSH, free T4`,
+  lb07:`(MAD)
+AC sugar, HbA1, HOMA-IR
+BUN, Cr
+U-ACr`,
+  lb08:`(UAC)
+U-ACr`,
+  lb09:`(H16)
+CBC/DC
+iron, TIBC`,
+  lb10:`(MAC)
+AC sugar
+TC, TG, HDL, LDL, TC/HDL ratio
+hsCRP, homocysteine, NT-proBNP, CPK`,
+  lb11:`(15U)
+T3, freeT4, TSH`,
+  lb12:`(MAG)
+FSH, LH, E2, TSH, prostaglandin, progesterone, chlamydia IgG`,
+  lb13:`(KKJ)
+anti-HIV, N-gono DNA, RPR/VDRL, HSVI-IgG, HSVII-IgG, treponemal, trachomatis DNA`,
+  lb14:`(MAK)
+alb, Zn, ferritin, cortisol, vit D3, homocysteine, TSH, fT4`,
+  lb15:`女性7項癌篩`,
+  lb16:`女性11項癌篩`,
+  lb17:`男性6項癌篩`,
+  lb18:`男性11項癌篩`,
+  // ex1-ex5: 檢查項目無備註
+  dr1:`重建 × 再生 × 賦活\n縮短修復期，啟動癒合力`,
+  dr2:`肝臟修復 × 告別暗沉\n洗去昨日的疲憊，迎接透亮的晨曦`,
+  dr3:`高效抗氧 × 代謝新生\n代謝不卡關，美麗更自然`,
+  dr4:`提升免疫力 × 神經穩定\n補足關鍵元素，讓身體回到最佳狀態`,
+  dr5:`基石修復 × 平衡調節\n平衡營養，為忙碌生活補回體力`,
+};
+
+/* ─ 一段式備註（hover 1.5秒顯示，不顯示於卡片） ─────────────────────── */
+const ITEM_DESCS = {
+  'en_gc_ins': '健保給付規定：胃鏡與大腸鏡同日檢查只給付其中一項。自費之項目與相關之處置皆需要自費。',
+  'en_gc_self': '完全自費表示完全不留健保紀錄，但是內視鏡檢查過程中相關處置及耗材皆需要自費。',
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   DATA  —  健檢/檢驗/檢查 來自 Excel；內視鏡/點滴待補充
+   ═══════════════════════════════════════════════════════════════════ */
+const CATEGORIES = [
+  {
+    id: 'health-check', label: '健檢方案', desc: '個人化健康評估套組',
+    items: [
+      { id:'hc1', name:'A 方案', desc:'肝功能、腎功能、膽固醇、\n血糖、糖化血色素、\n胰島素阻抗、\n尿液一般檢查、\n腹部超音波、甲狀腺超音波、TANITA身體組成', price:2600 },
+      { id:'hc2', name:'B 方案', desc:'A 方案\n+ 脂蛋白a + 頸動脈超音波 + 心電圖', price:3900 },
+      { id:'hc3', name:'C 方案', desc:'B 方案\n+ 11項癌指標檢驗', price:7900 },
+      { id:'hc4', name:'D 方案', desc:'C 方案\n+ 麻醉腸胃鏡', price:17900 },
+      { id:'hc5', name:'E 方案', desc:'D 方案\n+ 低劑量肺部電腦斷層檢查', price:23390 },
+    ]
+  },
+  {
+    id: 'lab', label: '檢驗', desc: '血液、尿液及特殊檢驗',
+    items: [
+      { id:'lb_s_c', type:'section', name:'檢驗套組' },
+      { id:'lb01', name:'成人健檢', desc:'(H14 + UR)', price:400 },
+      { id:'lb02', name:'成人健檢-安心', desc:'(H07)', price:600 },
+      { id:'lb03', name:'成人健檢-代謝', desc:'(MAB)', price:1000 },
+      { id:'lb04', name:'成人健檢-護肝', desc:'(MAA)', price:1200 },
+      { id:'lb05', name:'病毒性肝炎', desc:'(H20)', price:500 },
+      { id:'lb06', name:'減重前評估', desc:'(MAS)', price:1200 },
+      { id:'lb07', name:'糖尿病風險評估(含胰島素阻抗)', desc:'(MAD)', price:800 },
+      { id:'lb08', name:'定量蛋白尿', desc:'(UAC)', price:350 },
+      { id:'lb09', name:'缺鐵性貧血', desc:'(H16)', price:800 },
+      { id:'lb10', name:'心血管健康', desc:'(MAC)', price:2200 },
+      { id:'lb11', name:'甲狀腺機能', desc:'(15U)', price:700 },
+      { id:'lb12', name:'女性荷爾蒙', desc:'(MAG)', price:1500 },
+      { id:'lb13', name:'婚前健檢', desc:'(KKJ)', price:3800 },
+      { id:'lb14', name:'傷口癒合力指標', desc:'(MAK)', price:1500 },
+      { id:'lb15', name:'基礎腫瘤指標(女)', desc:'女性7項癌篩', price:2500 },
+      { id:'lb16', name:'完整腫瘤指標(女)', desc:'女性11項癌篩', price:4000 },
+      { id:'lb17', name:'基礎腫瘤指標(男)', desc:'男性6項癌篩', price:2200 },
+      { id:'lb18', name:'完整腫瘤指標(男)', desc:'男性11項癌篩', price:4000 },
+      { id:'lb_s0', type:'section', name:'一般生化檢查' },
+      { id:'lb_01001', name:'AC Sugar 飯前血糖', price:70 },
+      { id:'lb_01002', name:'PC Sugar 飯後血糖', price:70 },
+      { id:'lb_01003', name:'TG Triglyceride中性脂肪', price:120 },
+      { id:'lb_01004', name:'TC Total Cholesterol膽固醇', price:100 },
+      { id:'lb_01005', name:'HDL 高密度膽固醇', price:170 },
+      { id:'lb_01006', name:'LDL 低密度膽固醇', price:170 },
+      { id:'lb_01007', name:'Lipoprotein(a) 脂蛋白(a)', price:600 },
+      { id:'lb_01008', name:'BUN 血中尿素氮', price:70 },
+      { id:'lb_01009', name:'UA (Uric Acid) 尿酸', price:70 },
+      { id:'lb_01010', name:'Cr (Creatinine)  肌酸肝', price:70 },
+      { id:'lb_01011', name:'AST (GOT) 麩草轉氨基脢', price:70 },
+      { id:'lb_01012', name:'ALT (GPT) 麩丙銅轉氨基脢', price:70 },
+      { id:'lb_01013', name:'r-GT 丙麩氨轉脢', price:100 },
+      { id:'lb_01014', name:'Alk-P (ALP) 鹼性磷酸脢', price:70 },
+      { id:'lb_01015', name:'Total Bilirubin  膽紅素總量', price:70 },
+      { id:'lb_01016', name:'Direct Bilirubin 直接膽紅素', price:70 },
+      { id:'lb_01017', name:'Micro Bilirubin 新生兒黃疸', price:120 },
+      { id:'lb_01018', name:'Albumin 白蛋白', price:70 },
+      { id:'lb_01019', name:'Globulin 球蛋白', price:70 },
+      { id:'lb_01020', name:'T-P (Total-protein)全蛋白', price:70 },
+      { id:'lb_ag', name:'A/G ratio 蛋白比值', price:0 },
+      { id:'lb_01021', name:'Amylase 澱粉脢', price:150 },
+      { id:'lb_01022', name:'Lipase 解脂脢', price:250 },
+      { id:'lb_01023', name:'CPK 肌酸激脢', price:150 },
+      { id:'lb_01024', name:'LDH 乳酸脫氫脢', price:150 },
+      { id:'lb_01025', name:'CK-MB 肌酸磷酸脢', price:200 },
+      { id:'lb_01026', name:'Cholinesterase 膽素脂脢', price:150 },
+      { id:'lb_01027', name:'Ammonia 血氨', price:500 },
+      { id:'lb_01028', name:'VMA 香莢杏仁酸定量', price:500 },
+      { id:'lb_s1', type:'section', name:'肝炎病毒檢查' },
+      { id:'lb_02001', name:'HBcrAg 合併 HBs quant', price:2000 },
+      { id:'lb_02002', name:'HBsAg quant', price:500 },
+      { id:'lb_02003', name:'HBV-DNA', price:2500 },
+      { id:'lb_02004', name:'HCV-RNA', price:3000 },
+      { id:'lb_02005', name:'HCV 基因分型', price:4000 },
+      { id:'lb_02006', name:'HBsAg B型肝炎表面抗原', price:200 },
+      { id:'lb_02007', name:'HBsAb B型肝炎表面抗體', price:300 },
+      { id:'lb_02008', name:'HBeAg B型肝炎E抗原', price:350 },
+      { id:'lb_02009', name:'HBeAb B型肝炎E抗體', price:350 },
+      { id:'lb_02010', name:'HBc-IgG B肝核心抗體', price:300 },
+      { id:'lb_02011', name:'HBc-IgM B型肝炎核心IgM', price:500 },
+      { id:'lb_02012', name:'Anti-HAV IgM A型肝炎抗體', price:500 },
+      { id:'lb_02013', name:'HAV Ab(IgG+IgM) A型肝炎抗體', price:350 },
+      { id:'lb_02014', name:'Anti-HCV C型肝炎抗體', price:400 },
+      { id:'lb_s2', type:'section', name:'糖尿病檢查' },
+      { id:'lb_03001', name:'HbA1C  醣化血色素', price:300 },
+      { id:'lb_03002', name:'Insulin 胰島素血清檢驗', price:400 },
+      { id:'lb_03003', name:'C-Peptide C-胜鍊胰島素', price:300 },
+      { id:'lb_03004', name:'GA(Glycated Albumin) 醣化白蛋白', price:400 },
+      { id:'lb_03005', name:'GAD Ab 穀醯酸脫梭脢抗體', price:1000 },
+      { id:'lb_03006', name:'IA2 Ab 胰島細胞抗原-2抗體', price:2400 },
+      { id:'lb_s3', type:'section', name:'甲狀腺檢查' },
+      { id:'lb_04001', name:'T3 三碘甲狀腺素', price:250 },
+      { id:'lb_04002', name:'T4 四碘甲狀腺素', price:250 },
+      { id:'lb_04003', name:'TSH 甲狀腺促進素', price:350 },
+      { id:'lb_04004', name:'Free T4游離四碘甲狀腺', price:300 },
+      { id:'lb_04005', name:'Free T3游離三碘甲狀腺', price:300 },
+      { id:'lb_04006', name:'T3 Uptake三碘腺攝取率', price:500 },
+      { id:'lb_04007', name:'Thyroglobulin甲狀腺球蛋白', price:200 },
+      { id:'lb_04008', name:'ATA甲狀腺球蛋白抗體', price:400 },
+      { id:'lb_04009', name:'TSH recepter結合體抗體', price:700 },
+      { id:'lb_04010', name:'Anti-TPO甲狀腺過氧化脢', price:400 },
+      { id:'lb_s4', type:'section', name:'副甲狀腺檢查' },
+      { id:'lb_05001', name:'Intact-PTH 副甲狀腺素', price:800 },
+      { id:'lb_05002', name:'Calcitonin 降血鈣素', price:600 },
+      { id:'lb_s5', type:'section', name:'腫瘤癌症篩檢' },
+      { id:'lb_06001', name:'NMP22 膀胱癌', price:1500 },
+      { id:'lb_06002', name:'HE4  副睪蛋白質4', price:1600 },
+      { id:'lb_06003', name:'CA724 腫瘤標記', price:500 },
+      { id:'lb_06004', name:'Pro-GRP 胃泌素釋放前體', price:1000 },
+      { id:'lb_06005', name:'NSE 神經元特異烯醇酶', price:500 },
+      { id:'lb_06006', name:'Cyfra21-1 細胞角質蛋白片段21-1', price:600 },
+      { id:'lb_06007', name:'PIVKA-II 異常凝血酶原', price:1200 },
+      { id:'lb_06008', name:'AFP 甲型胎兒蛋白', price:350 },
+      { id:'lb_06009', name:'CEA 癌胚胎抗原', price:400 },
+      { id:'lb_06010', name:'β-HCG人類絨毛膜激素', price:400 },
+      { id:'lb_06011', name:'β2-Microglobaline 骨髓癌', price:600 },
+      { id:'lb_06012', name:'CA125 腫瘤標記', price:500 },
+      { id:'lb_06013', name:'CA153 腫瘤標記', price:500 },
+      { id:'lb_06014', name:'CA199 腫瘤標記', price:500 },
+      { id:'lb_06015', name:'SCC 鱗狀細胞癌抗原', price:500 },
+      { id:'lb_06016', name:'EBV-DNA 鼻咽癌', price:1200 },
+      { id:'lb_06017', name:'EB VCA-IgG 鼻咽癌', price:500 },
+      { id:'lb_06018', name:'EB VCA-IgM 鼻咽癌', price:500 },
+      { id:'lb_06019', name:'EB VCA-IgA 鼻咽癌病毒', price:500 },
+      { id:'lb_s6', type:'section', name:'攝護腺檢查' },
+      { id:'lb_07001', name:'PSA 攝護腺特異抗原', price:500 },
+      { id:'lb_07002', name:'Free PSA 游離攝護腺', price:500 },
+      { id:'lb_07003', name:'PHI 攝護腺健康指標\n(含PSA、fPSA、p2PSA)', price:2500 },
+      { id:'lb_s7', type:'section', name:'特殊檢查' },
+      { id:'lb_08001', name:'UBT 碳-13尿素呼氣測試(幽門桿菌)', price:1200 },
+      { id:'lb_08002', name:'CTC循環腫瘤細胞檢測', price:10000 },
+      { id:'lb_08003', name:'SOD-RBC超氧化物歧化脢', price:1400 },
+      { id:'lb_s8', type:'section', name:'常見尿液.糞便.痰液檢查' },
+      { id:'lb_09001', name:'Urine Routine 尿一般檢查', price:100 },
+      { id:'lb_09002', name:'尿生化檢查', price:100 },
+      { id:'lb_09003', name:'Urine Protein 定量尿蛋白', price:70 },
+      { id:'lb_09004', name:'Microalbumin 微量蛋白', price:300 },
+      { id:'lb_09005', name:'Urine Creatinine 尿肌肝酸', price:70 },
+      { id:'lb_09006', name:'Pregnancy test懷孕試驗', price:100 },
+      { id:'lb_09007', name:'Amoeba    阿米巴檢查', price:400 },
+      { id:'lb_09008', name:'Stool Routine  糞便常規', price:100 },
+      { id:'lb_09009', name:'HpSA 糞便抗原檢查(幽門桿菌)', price:500 },
+      { id:'lb_09010', name:'iFOBT糞便潛血免疫分析', price:400 },
+      { id:'lb_09011', name:'Perianal swab 蟯蟲膠片', price:50 },
+      { id:'lb_09012', name:'Sputum Routine痰液常規', price:300 },
+      { id:'lb_09013', name:'腸道菌分析', price:8000 },
+      { id:'lb_s9', type:'section', name:'一般血液檢查' },
+      { id:'lb_10001', name:'CBC (全套血液檢查8項)', price:250 },
+      { id:'lb_10002', name:'D/C (WBC 分類計數)', price:250 },
+      { id:'lb_10003', name:'PT  凝血脢原時間', price:200 },
+      { id:'lb_10004', name:'APTT 部份凝血活脢時間', price:300 },
+      { id:'lb_10005', name:'Blood Type 血型', price:50 },
+      { id:'lb_10006', name:'RH因子', price:100 },
+      { id:'lb_10007', name:'Crossmatching test 核血試驗', price:500 },
+      { id:'lb_10008', name:'ESR 紅血球沈降速率', price:100 },
+      { id:'lb_10009', name:'G6PD 蠶豆症', price:400 },
+      { id:'lb_s10', type:'section', name:'貧血檢查' },
+      { id:'lb_11001', name:'Fe 鐵', price:100 },
+      { id:'lb_11002', name:'TIBC 總鐵結合能力', price:300 },
+      { id:'lb_11003', name:'Vitamin B12 維他命B12', price:500 },
+      { id:'lb_11004', name:'Folate 葉酸', price:500 },
+      { id:'lb_11005', name:'Transferrin 運鐵蛋白', price:400 },
+      { id:'lb_11006', name:'Ferritin 鐵蛋白', price:400 },
+      { id:'lb_11007', name:'Hb-EP  血紅素電泳', price:500 },
+      { id:'lb_s11', type:'section', name:'電解質.重金屬檢查' },
+      { id:'lb_12001', name:'Na (Sodium) 鈉', price:70 },
+      { id:'lb_12002', name:'K (Potasium) 鉀', price:70 },
+      { id:'lb_12003', name:'Cl (Chloride) 氯', price:70 },
+      { id:'lb_12004', name:'Ca (Calcium) 鈣', price:70 },
+      { id:'lb_12005', name:'P (Phosphorous) 磷', price:70 },
+      { id:'lb_12006', name:'Mg (Magnesium) 鎂', price:70 },
+      { id:'lb_12007', name:'Li (Lithium) 鋰', price:300 },
+      { id:'lb_12008', name:'Pb (Lead) 鉛', price:600 },
+      { id:'lb_12009', name:'Hg (Mercury) 汞', price:800 },
+      { id:'lb_12010', name:'Al (Aluminum)鋁', price:600 },
+      { id:'lb_12011', name:'Zn (Zinc)鋅', price:700 },
+      { id:'lb_12012', name:'Se (Selenium) 硒', price:1000 },
+      { id:'lb_12013', name:'Cu (Copper) 銅', price:500 },
+      { id:'lb_12014', name:'As (Arsenic) 砷', price:800 },
+      { id:'lb_s12', type:'section', name:'心肌梗塞檢查' },
+      { id:'lb_13001', name:'D-Dimer test', price:750 },
+      { id:'lb_13002', name:'Troponin-I心肌旋轉蛋白-I', price:800 },
+      { id:'lb_13003', name:'hsCRP高靈敏度C反應蛋白', price:360 },
+      { id:'lb_13004', name:'Homocysteine同半胱胺酸', price:800 },
+      { id:'lb_13005', name:'NT-proBNP 心臟標記', price:1200 },
+      { id:'lb_s13', type:'section', name:'血清免疫學檢查' },
+      { id:'lb_14001', name:'RA 類風濕因子(比濁法)', price:300 },
+      { id:'lb_14002', name:'CRP C反應蛋白(比濁法)', price:300 },
+      { id:'lb_14003', name:'H.pylori Ab 幽門桿菌抗體', price:500 },
+      { id:'lb_14004', name:'HpSA 幽門桿菌糞便抗原', price:800 },
+      { id:'lb_14005', name:'ASLO 抗連鎖球溶解素', price:250 },
+      { id:'lb_14006', name:'IgG 免疫球蛋白 G', price:300 },
+      { id:'lb_14007', name:'IgA 免疫球蛋白 A', price:300 },
+      { id:'lb_14008', name:'IgM 免疫球蛋白 M', price:300 },
+      { id:'lb_14009', name:'IgD 免疫球蛋白 D', price:300 },
+      { id:'lb_14010', name:'IgE 免疫球蛋白 E', price:400 },
+      { id:'lb_14011', name:'C3  補體-3', price:300 },
+      { id:'lb_14012', name:'C4  補體-4', price:300 },
+      { id:'lb_14013', name:'Rubella IgG  德國痳疹', price:300 },
+      { id:'lb_14014', name:'Rubella IgM  德國痳疹', price:600 },
+      { id:'lb_s14', type:'section', name:'自體免疫檢查' },
+      { id:'lb_15001', name:'ANA 抗細胞核抗體', price:500 },
+      { id:'lb_15002', name:'Anti-ds DNA  DNA抗體', price:400 },
+      { id:'lb_15003', name:'Anti-CCP抗環瓜氨酸抗體', price:1200 },
+      { id:'lb_15004', name:'Anti-ENA抗體鑑定', price:2000 },
+      { id:'lb_15005', name:'CTD Screen自體免疫篩檢', price:450 },
+      { id:'lb_15006', name:'ANCA 抗嗜中性球細胞質抗體', price:800 },
+      { id:'lb_15007', name:'AchR Ab 乙醯膽鹼抗體', price:1800 },
+      { id:'lb_15008', name:'ASMA 平滑肌抗體', price:400 },
+      { id:'lb_15009', name:'Mitochondrial Ab 抗粒腺體', price:500 },
+      { id:'lb_15010', name:'Cardiolipin IgG 心脂抗體', price:900 },
+      { id:'lb_15011', name:'Cardiolipin IgM 心脂抗體', price:800 },
+      { id:'lb_15012', name:'Anti-β2-GPI IgG', price:700 },
+      { id:'lb_15013', name:'Anti-β2-GPI IgM', price:1400 },
+      { id:'lb_15014', name:'Lupus Anti-coagulant', price:2000 },
+      { id:'lb_15015', name:'tTG-IgA 乳糜瀉抗體', price:3000 },
+      { id:'lb_s15', type:'section', name:'傳染病檢查' },
+      { id:'lb_16001', name:'Mycoplasma IgG 黴漿菌', price:360 },
+      { id:'lb_16002', name:'Mycoplasma IgM 黴漿菌', price:400 },
+      { id:'lb_16003', name:'CMV-IgG 巨細胞病毒', price:1000 },
+      { id:'lb_16004', name:'CMV-IgM 巨細胞病毒', price:600 },
+      { id:'lb_16005', name:'Meales Virus-IgG 麻疹', price:360 },
+      { id:'lb_16006', name:'Meales Virus-IgM 麻疹', price:1200 },
+      { id:'lb_16007', name:'MumpsVirus-IgG 腮腺炎', price:500 },
+      { id:'lb_16008', name:'MumpsVirus-IgM 腮腺炎', price:1200 },
+      { id:'lb_16009', name:'V-Zoster IgG 水痘', price:1000 },
+      { id:'lb_16010', name:'V-Zoster IgM 水痘', price:1000 },
+      { id:'lb_16011', name:'Toxoplasma-IgG 弓漿蟲', price:800 },
+      { id:'lb_16012', name:'Toxoplasma-IgM 弓漿蟲', price:800 },
+      { id:'lb_16013', name:'Widal & Weil-Felix 傷寒', price:300 },
+      { id:'lb_16014', name:'Rota virus Ag  輪狀病毒', price:600 },
+      { id:'lb_s16', type:'section', name:'生殖功能荷爾蒙' },
+      { id:'lb_17001', name:'AMH 抗穆勒氏管荷爾蒙', price:1000 },
+      { id:'lb_17002', name:'SHBG 套檢', price:1200 },
+      { id:'lb_17003', name:'P4 (Progesteron) 黃體脂酮', price:350 },
+      { id:'lb_17004', name:'GH 生長激素', price:500 },
+      { id:'lb_17005', name:'Cortisol(8AM) 皮質素', price:400 },
+      { id:'lb_17006', name:'Cortisol(4PM) 皮質素', price:400 },
+      { id:'lb_17007', name:'Aldosterone 醛類脂醇酵素', price:800 },
+      { id:'lb_17008', name:'PRL (Prolactin) 泌乳素', price:350 },
+      { id:'lb_17009', name:'Testosterone 睪固酮', price:300 },
+      { id:'lb_17010', name:'FSH 濾泡激素', price:350 },
+      { id:'lb_17011', name:'LH 黃體激素', price:350 },
+      { id:'lb_17012', name:'E2 (Estradiol)  雌二素', price:350 },
+      { id:'lb_17013', name:'β-HCG人類絨毛膜激素', price:400 },
+      { id:'lb_17014', name:'IGF-1類胰島素成長因子', price:1000 },
+      { id:'lb_17015', name:'DHEA-S 異雄固酮', price:500 },
+      { id:'lb_17016', name:'ACTH 促腎上腺皮質素', price:1200 },
+      { id:'lb_17017', name:'Renin Activity(PRA)', price:1000 },
+      { id:'lb_17018', name:'5-HIAA 5-氫氧靛基醋酸', price:1500 },
+      { id:'lb_17019', name:'Catecholamine 兒茶酚氨測定', price:2000 },
+      { id:'lb_s17', type:'section', name:'過敏原檢查' },
+      { id:'lb_18001', name:'IgE 免疫球蛋白 E', price:400 },
+      { id:'lb_18002', name:'Phadiatop (吸入性過敏)', price:600 },
+      { id:'lb_18003', name:'40 項過敏原(吸入+食入)', price:2500 },
+      { id:'lb_18004', name:'66 項過敏原(吸入+食入)', price:3600 },
+      { id:'lb_18005', name:'101項過敏原(食入)', price:8000 },
+      { id:'lb_18006', name:'110項過敏原(急性+慢性)', price:4800 },
+      { id:'lb_18007', name:'224項過敏原(急性+慢性)', price:12000 },
+      { id:'lb_s18', type:'section', name:'藥物.毒物檢查' },
+      { id:'lb_19001', name:'Carbamazepine(Tegretol)', price:400 },
+      { id:'lb_19002', name:'Phenytoin (Dilantin)', price:400 },
+      { id:'lb_19003', name:'Theophylline/Aminophyline', price:400 },
+      { id:'lb_19004', name:'Valproic acid (Depakene)', price:400 },
+      { id:'lb_19005', name:'Digoxin  長葉毛地黃', price:400 },
+      { id:'lb_19006', name:'Phenobarbital(Luminal)', price:400 },
+      { id:'lb_19007', name:'Morphine 嗎啡', price:400 },
+      { id:'lb_19008', name:'Amphetamin 安非他命', price:400 },
+      { id:'lb_19009', name:'Heroin 海洛因', price:400 },
+      { id:'lb_19010', name:'MDMA 搖頭丸', price:1000 },
+      { id:'lb_19011', name:'Ketamine K他命', price:1000 },
+      { id:'lb_s19', type:'section', name:'基因檢測' },
+      { id:'lb_20001', name:'APO-E 阿茲海默症基因', price:2000 },
+      { id:'lb_20002', name:'5HTT genotyping 血清素運送基因', price:3000 },
+      { id:'lb_20003', name:'HLA-B5801 抗痛風藥物過敏基因', price:3500 },
+      { id:'lb_20004', name:'HLA-B1502 抗癲癇藥物過敏基因', price:4000 },
+      { id:'lb_20005', name:'HLA-B27 僵直性脊椎炎', price:2000 },
+      { id:'lb_20006', name:'肥胖基因檢測', price:5500 },
+      { id:'lb_s20', type:'section', name:'性病檢查' },
+      { id:'lb_21001', name:'VDRL (STS/RPR) 梅毒', price:100 },
+      { id:'lb_21002', name:'TPHA 梅毒螺旋體', price:300 },
+      { id:'lb_21003', name:'HIV Ag/Ab Combo test', price:400 },
+      { id:'lb_21004', name:'FTA-ABS IgM 梅毒螢光染', price:1000 },
+      { id:'lb_21005', name:'Chlamydia-IgG 披衣菌', price:600 },
+      { id:'lb_21006', name:'Chlamydia-IgM 披衣菌', price:600 },
+      { id:'lb_21007', name:'Chlamydia-IgA 披衣菌', price:600 },
+      { id:'lb_21008', name:'HSV-I IgG 疱疹 1 型', price:300 },
+      { id:'lb_21009', name:'HSV-II IgG 疱疹 2 型', price:300 },
+      { id:'lb_21010', name:'HSV-I IgM 疱疹 1型', price:700 },
+      { id:'lb_21011', name:'HSV-II IgM 疱疹 2 型', price:700 },
+      { id:'lb_21012', name:'HSV(1+2)-DNA', price:2000 },
+      { id:'lb_21013', name:'Chlamydia DNA 披衣菌DNA', price:1200 },
+      { id:'lb_21014', name:'Trichomonas DNA 滴蟲DNA', price:1200 },
+      { id:'lb_21015', name:'N.gono DNA 淋病雙球菌', price:1200 },
+      { id:'lb_21016', name:'HPV-DNA Assay', price:1500 },
+      { id:'lb_21017', name:'人類乳突病毒檢測', price:1400 },
+      { id:'lb_s21', type:'section', name:'婦產科' },
+      { id:'lb_22001', name:'九合一DNA(優奈)', price:3500 },
+      { id:'lb_22002', name:'B群鏈球菌檢測', price:500 },
+      { id:'lb_22003', name:'唐氏二指標(附表)', price:800 },
+      { id:'lb_22004', name:'新二孕期唐氏四指標(附表)', price:2200 },
+      { id:'lb_s22', type:'section', name:'精液檢查' },
+      { id:'lb_23001', name:'精液分析Semen Analysis', price:400 },
+      { id:'lb_23002', name:'精子品質分析', price:1500 },
+      { id:'lb_23003', name:'精子DNA碎片檢測', price:6000 },
+      { id:'lb_s23', type:'section', name:'細菌培養' },
+      { id:'lb_24001', name:'Blood culture(需氧)', price:500 },
+      { id:'lb_24002', name:'Blood culture(厭氧)', price:500 },
+      { id:'lb_24003', name:'Urine Culture 尿液培養', price:360 },
+      { id:'lb_24004', name:'Stool Culture 糞便培養', price:500 },
+      { id:'lb_24005', name:'Salmonella/Shigella 培養', price:500 },
+      { id:'lb_24006', name:'Wound/Pus culture(需氧)', price:360 },
+      { id:'lb_24007', name:'Wound/Pus culture(厭氧)', price:360 },
+      { id:'lb_24008', name:'Water Culture 水質培養', price:500 },
+      { id:'lb_24009', name:'Sputum Culture 痰液培養', price:500 },
+      { id:'lb_24010', name:'Gram’s Stain 革蘭氏染', price:100 },
+      { id:'lb_24011', name:'Acid-FastStain抗酸菌染', price:250 },
+      { id:'lb_24012', name:'TB Culture 結核桿菌', price:600 },
+      { id:'lb_s24', type:'section', name:'骨質疏鬆症' },
+      { id:'lb_25001', name:'關節囊液分析', price:200 },
+      { id:'lb_25002', name:'BAP骨質特異性鹼性磷酸酶', price:600 },
+      { id:'lb_25003', name:'Vitamin.D 維他命D', price:800 },
+      { id:'lb_25004', name:'P1NP骨骼生成速度指標', price:1200 },
+      { id:'lb_25005', name:'β-crosslaps(β-CTx)', price:1000 },
+      { id:'lb_s25', type:'section', name:'病理、 細胞學' },
+      { id:'lb_26001', name:'體液細胞檢查', price:600 },
+      { id:'lb_26002', name:'穿刺細胞檢查', price:700 },
+      { id:'lb_26003', name:'薄片細胞學檢查', price:1200 },
+      { id:'lb_26004', name:'第一級外科病理', price:400 },
+      { id:'lb_26005', name:'第二級外科病理', price:800 },
+      { id:'lb_26006', name:'第三級外科病理', price:1000 },
+      { id:'lb_26007', name:'第四級外科病理', price:1800 },
+      { id:'lb_26008', name:'第五級外科病理', price:2600 },
+    
+    ]
+  },
+  {
+    id: 'exam', label: '檢查及處置', desc: '影像及功能性儀器檢查',
+    items: [
+      { id:'ex_su', type:'section', name:'超音波' },
+      { id:'ex1', name:'全腹部超音波', desc:'檢查肝、膽、胰、脾、腎', price:800 },
+      { id:'ex2', name:'甲狀腺超音波', desc:'檢查甲狀腺與周邊組織', price:600 },
+      { id:'ex3', name:'頸動脈超音波', desc:'了解頸部血管健康狀態', price:600 },
+      { id:'ex_sg', type:'section', name:'超音波導引' },
+      { id:'ex_g4', name:'超音波導引 + 關節穿刺 + 關節囊液體分析', desc:'', price:2050 },
+      { id:'ex_g5', name:'超音波導引 + 肋膜穿刺 + 肋膜腔液體分析', desc:'', price:2650 },
+      { id:'ex_g6', name:'超音波導引 + 腹腔穿刺 + 腹腔液體分析', desc:'', price:2400 },
+      { id:'ex_g7', name:'超音波導引 + 甲狀腺穿刺 + 薄片細胞學檢查', desc:'', price:3300 },
+      { id:'ex_so', type:'section', name:'其他檢查' },
+      { id:'ex4', name:'心電圖', desc:'基礎的心臟狀態篩檢', price:150 },
+      { id:'ex5', name:'TANITA身體組成', desc:'了解身體組成與平衡狀態', price:500 },
+    
+    ]
+  },
+  {
+    id: 'endo', label: '內視鏡', desc: '胃腸道內視鏡診療',
+    items: [
+    ]
+  },
+  {
+    id: 'drip', label: '點滴', desc: '靜脈注射功能性點滴療程',
+    items: [
+      { id:'dr1', name:'術後全效組織修復', desc:'重建 × 再生 × 賦活\n縮短修復期，啟動癒合力',                   price:2000 },
+      { id:'dr2', name:'晨曦抗氧護肝修護', desc:'肝臟修復 × 告別暗沉\n洗去昨日的疲憊，迎接透亮的晨曦',           price:1800 },
+      { id:'dr3', name:'循環代謝全效配方', desc:'高效抗氧 × 代謝新生\n代謝不卡關，美麗更自然',                   price:600  },
+      { id:'dr4', name:'元素原力。全效修復', desc:'提升免疫力 × 神經穩定\n補足關鍵元素，讓身體回到最佳狀態',     price:2500 },
+      { id:'dr5', name:'微量元素體力補充', desc:'基石修復 × 平衡調節\n平衡營養，為忙碌生活補回體力',             price:1250 },
+    ]
+  }
+];
+
+/* ═══════════════════════════════════════════════════════════════════
+   ENDO TREE  —  三層式內視鏡選單
+   ═══════════════════════════════════════════════════════════════════ */
+const ENDO_TREE = {
+  layer1: [
+    { id:'en_gastro',   name:'胃鏡',                      basePrice:1600,
+      layer2:[
+        {id:'en_g_s',  name:'標準胃鏡 (直徑約0.9cm) 經口', desc:'使用拋棄式咬口器',                                 addPrice:0},
+        {id:'en_g_to', name:'極細胃鏡 (直徑約0.5cm) 經口', desc:'使用拋棄式咬口器',                                 addPrice:700},
+        {id:'en_g_tn', name:'極細胃鏡 (直徑約0.5cm) 經鼻', desc:'無其他耗材',                                       addPrice:600},
+        {id:'en_g_hp', name:'加驗幽門桿菌',               desc:'快速尿素測試 NT$300 ＋ 拋棄式切片鉗 NT$1,000',    addPrice:1300}
+      ],
+      layer3:[{id:'en_g_w',name:'清醒',addPrice:0},{id:'en_g_l',name:'輕中度鎮靜',addPrice:2000},{id:'en_g_a',name:'麻醉',addPrice:4000}]
+    },
+    { id:'en_colon',    name:'大腸鏡',                     basePrice:2500,
+      layer2:[
+        {id:'en_c_j',  name:'日本製造代餐與清腸藥物', desc:'拋棄式檢查褲 ＋ 大腸鏡二氧化碳充氣', addPrice:1500},
+        {id:'en_c_t',  name:'台灣製造代餐與清腸藥物', desc:'拋棄式檢查褲 ＋ 大腸鏡二氧化碳充氣', addPrice:1200}
+      ],
+      layer3:[{id:'en_c_w',name:'清醒',addPrice:0},{id:'en_c_l',name:'輕中度鎮靜',addPrice:2500},{id:'en_c_a',name:'麻醉',addPrice:4000}]
+    },
+    { id:'en_gc_ins',   name:'胃鏡＋大腸鏡（部分健保）',   desc:'健保給付規定：胃鏡與大腸鏡同日檢查只給付其中一項。自費之項目與相關之處置皆需要自費', basePrice:1600,
+      layer2:[
+        {id:'en_gi_s',  name:'標準胃鏡 (直徑約0.9cm) 經口', desc:'使用拋棄式咬口器',                              addPrice:0},
+        {id:'en_gi_to', name:'極細胃鏡 (直徑約0.5cm) 經口', desc:'使用拋棄式咬口器',                              addPrice:700},
+        {id:'en_gi_tn', name:'極細胃鏡 (直徑約0.5cm) 經鼻', desc:'無其他耗材',                                    addPrice:600},
+        {id:'en_gi_hp', name:'加驗幽門桿菌',               desc:'快速尿素測試 NT$300 ＋ 拋棄式切片鉗 NT$1,000',    addPrice:1300},
+        {id:'en_gi_j',  name:'日本製造代餐與清腸藥物', desc:'拋棄式檢查褲 ＋ 大腸鏡二氧化碳充氣', addPrice:1500},
+        {id:'en_gi_t',  name:'台灣製造代餐與清腸藥物', desc:'拋棄式檢查褲 ＋ 大腸鏡二氧化碳充氣', addPrice:1200}
+      ],
+      layer3:[{id:'en_gi_w',name:'清醒',addPrice:0},{id:'en_gi_l',name:'輕中度鎮靜',addPrice:3000},{id:'en_gi_a',name:'麻醉',addPrice:6500}]
+    },
+    { id:'en_gc_self',  name:'胃鏡＋大腸鏡（完全自費）',   desc:'完全自費表示完全不留健保紀錄，但是內視鏡檢查過程中相關處置及茈材皆需要自費', basePrice:4100,
+      layer2:[
+        {id:'en_gs_s',  name:'標準胃鏡 (直徑約0.9cm) 經口', desc:'使用拋棄式咬口器',                              addPrice:0},
+        {id:'en_gs_to', name:'極細胃鏡 (直徑約0.5cm) 經口', desc:'使用拋棄式咬口器',                              addPrice:700},
+        {id:'en_gs_tn', name:'極細胃鏡 (直徑約0.5cm) 經鼻', desc:'無其他耗材',                                    addPrice:600},
+        {id:'en_gs_hp', name:'加驗幽門桿菌',               desc:'快速尿素測試 NT$300 ＋ 拋棄式切片鉗 NT$1,000',    addPrice:1300},
+        {id:'en_gs_j',  name:'日本製造代餐與清腸藥物', desc:'拋棄式檢查褲 ＋ 大腸鏡二氧化碳充氣', addPrice:1500},
+        {id:'en_gs_t',  name:'台灣製造代餐與清腸藥物', desc:'拋棄式檢查褲 ＋ 大腸鏡二氧化碳充氣', addPrice:1200}
+      ],
+      layer3:[{id:'en_gs_w',name:'清醒',addPrice:0},{id:'en_gs_l',name:'輕中度鎮靜',addPrice:3000},{id:'en_gs_a',name:'麻醉',addPrice:6500}]
+    }
+  ],
+  special:[
+    {id:'en_capsule', name:'膠囊內視鏡',                   desc:'含台灣製造代餐與清腸藥物',       price:56000},
+    {id:'en_arbl',    name:'ARBL 抗逆流結紮術',  desc:'需同時選擇胃鏡＋鎮靜或麻醉',    price:16000},
+    {id:'en_het',     name:'HET 微創痔瘡冷凝刀',           desc:'需同時選擇大腸鏡＋鎮靜或麻醉',  price:35500}
+  ]
+};
+
+
+const DISCOUNT_RULES = [
+  { id:'disc-endo-1', name:'舒眠胃＋大腸鏡同日套組', note:'同日無痛胃鏡與無痛大腸鏡', discount:0,
+    check:c=>c.some(i=>i.id==='en1')&&c.some(i=>i.id==='en3') },
+  { id:'disc-endo-2', name:'一般胃＋大腸鏡同日優惠', note:'同日一般胃鏡與一般大腸鏡', discount:0,
+    check:c=>c.some(i=>i.id==='en2')&&c.some(i=>i.id==='en4') },
+  { id:'disc-hp', name:'胃鏡加做 HP 快速檢測優惠', note:'任何胃鏡搭配幽門桿菌快速尿素酶', discount:0,
+    check:c=>(c.some(i=>i.id==='en1')||c.some(i=>i.id==='en2'))&&c.some(i=>i.id==='en6') },
+  { id:'disc-drip-2', name:'雙選點滴療程優惠', note:'任選兩項（含）以上點滴', discount:0,
+    check:c=>c.filter(i=>i.id.startsWith('dr')).length>=2 },
+  { id:'disc-drip-3', name:'三選點滴療程優惠', note:'任選三項（含）以上點滴', discount:0,
+    check:c=>c.filter(i=>i.id.startsWith('dr')).length>=3 },
+  // 超音波複選優惠 (取最優一組，不疊加)
+  { id:'disc-us-2', name:'雙項超音波優惠', note:'複選任意2項超音波折價200', discount:200,
+    check:c=>c.filter(i=>['ex1','ex2','ex3'].includes(i.id)).length>=2 },
+  { id:'disc-us-3', name:'三項超音波優惠', note:'複選三項超音波折價400', discount:400,
+    check:c=>c.filter(i=>['ex1','ex2','ex3'].includes(i.id)).length>=3 },
+];
+
+/* ═══════════════════════════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════════════════════════ */
+let cart = [];
+let currentCat = null;
+let kbIndex = -1;
+let endoDepth=0, endoL1=null, endoL2=null;
+
+/* ═══════════════════════════════════════════════════════════════════
+   UTILS
+   ═══════════════════════════════════════════════════════════════════ */
+function fmtPrice(p){ return Number(p).toLocaleString('zh-TW'); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function nl2br(s){ return esc(s).replace(/\n/g,'<br>'); }
+function nl2list(s){
+  return s.split('\n').map(l=>`<div class="tooltip-line"><span class="tooltip-bullet">•</span><span>${esc(l.trim())}</span></div>`).join('');
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),1500);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TOOLTIP
+   ═══════════════════════════════════════════════════════════════════ */
+const tooltipEl = document.getElementById('tooltipPopup');
+let tooltipTimer = null;
+let mouseX = 0, mouseY = 0;
+
+document.addEventListener('mousemove', e=>{ mouseX=e.clientX; mouseY=e.clientY; positionTooltip(); });
+
+document.addEventListener('mouseover', e=>{
+  const card = e.target.closest('.item-card[data-id]');
+  if(!card) return;
+  const notes = ITEM_NOTES[card.dataset.id];
+  const rdesc = ITEM_DESCS[card.dataset.id];
+  if(!notes && !rdesc) return;
+  clearTimeout(tooltipTimer);
+  tooltipTimer = setTimeout(()=>{
+    if(notes){
+      tooltipEl.innerHTML = `<div class="tooltip-title">包含項目</div>${nl2list(notes)}`;
+    } else {
+      tooltipEl.innerHTML = `<div class="tooltip-title">備註</div>`
+        + `<div style="line-height:1.8;word-break:keep-all;overflow-wrap:break-word">${esc(rdesc)}</div>`;
+    }
+    tooltipEl.classList.add('visible');
+    positionTooltip();
+  }, 1500);
+});
+
+document.addEventListener('mouseout', e=>{
+  const card = e.target.closest('.item-card[data-id]');
+  if(!card) return;
+  clearTimeout(tooltipTimer);
+  tooltipEl.classList.remove('visible');
+});
+
+function positionTooltip(){
+  if(!tooltipEl.classList.contains('visible')) return;
+  const tw=tooltipEl.offsetWidth||240, th=tooltipEl.offsetHeight||120;
+  const vw=window.innerWidth,   vh=window.innerHeight;
+  let left=mouseX+18, top=mouseY+14;
+  if(left+tw>vw-8) left=mouseX-tw-18;
+  if(top+th>vh-8)  top=mouseY-th-14;
+  tooltipEl.style.left=left+'px';
+  tooltipEl.style.top=top+'px';
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SEARCH
+   ═══════════════════════════════════════════════════════════════════ */
+const searchInput   = document.getElementById('searchInput');
+const searchResults = document.getElementById('searchResults');
+const searchIcon    = document.getElementById('searchIcon');
+const searchClear   = document.getElementById('searchClear');
+
+searchInput.addEventListener('input', ()=>{
+  const q = searchInput.value.trim();
+  if(!q){ closeSearch(); return; }
+  searchIcon.classList.add('hidden');
+  searchClear.classList.add('visible');
+  runSearch(q);
+});
+
+// Keyboard navigation: ↑↓ to move, Enter to select, Esc to close
+searchInput.addEventListener('keydown', e=>{
+  const items = document.querySelectorAll('#searchResults .search-result-item');
+  if(!searchResults.classList.contains('open') || items.length===0){
+    if(e.key==='Escape') closeSearch();
+    return;
+  }
+  if(e.key==='ArrowDown'){
+    e.preventDefault();
+    kbIndex = Math.min(kbIndex+1, items.length-1);
+    updateKbActive(items);
+  } else if(e.key==='ArrowUp'){
+    e.preventDefault();
+    kbIndex = Math.max(kbIndex-1, -1);
+    updateKbActive(items);
+  } else if(e.key==='Enter'){
+    e.preventDefault();
+    const target = kbIndex>=0 ? items[kbIndex] : items[0];
+    if(target) target.click();
+  } else if(e.key==='Escape'){
+    closeSearch();
+  }
+});
+
+function updateKbActive(items){
+  items.forEach((el,i)=>{
+    el.classList.toggle('kb-active', i===kbIndex);
+    if(i===kbIndex) el.scrollIntoView({block:'nearest'});
+  });
+}
+
+searchClear.addEventListener('click', ()=>{
+  searchInput.value=''; closeSearch();
+  searchInput.focus();
+});
+
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.search-box')) closeSearch();
+});
+
+function closeSearch(){
+  searchResults.classList.remove('open');
+  searchIcon.classList.remove('hidden');
+  searchClear.classList.remove('visible');
+
+}
+
+/* 搜尋結果點選直接加入清單 */
+function addItemFromSearch(catId, itemId){
+  const cat  = CATEGORIES.find(c=>c.id===catId);
+  if(!cat) return;
+  const item = cat.items.find(i=>i.id===itemId);
+  if(!item || item.type==='section') return;
+  const inCart = cart.findIndex(c=>c.id===item.id);
+  if(inCart !== -1){
+    showToast(`「${item.name}」已在費用清單中`);
+  } else {
+    if(HC_RADIO.has(item.id)) cart = cart.filter(c=>!HC_RADIO.has(c.id));
+    cart.push({id:item.id, name:item.name, catLabel:cat.label,
+               price:item.price, mode:'self', priceEdited:false});
+    showToast(`✓ 已加入（自費）：${item.name}`);
+  }
+  renderCart();
+  if(currentCat) buildItemsGrid(currentCat);
+}
+
+function runSearch(q){
+  kbIndex = -1;
+  const ql = q.toLowerCase();
+  const hits = [];
+  CATEGORIES.forEach(cat=>{
+    cat.items.forEach(item=>{
+      const haystack = (item.name+' '+item.desc+' '+(ITEM_NOTES[item.id]||'')).toLowerCase();
+      if(haystack.includes(ql)){
+        hits.push({ catId:cat.id, catLabel:cat.label, item });
+      }
+    });
+  });
+
+  searchResults.innerHTML='';
+  if(hits.length===0){
+    searchResults.innerHTML=`<div class="search-empty">找不到「${esc(q)}」相關項目</div>`;
+  } else {
+    hits.forEach(h=>{
+      const div=document.createElement('div');
+      div.className='search-result-item';
+      const priceStr = h.item.price>0 ? `NT$ ${fmtPrice(h.item.price)}` : '待建檔';
+      const descFirst = (h.item.desc||'').split('\n')[0];
+      div.innerHTML=`
+        <span class="sr-cat-badge">${esc(h.catLabel)}</span>
+        <span class="sr-name">${esc(h.item.name)}</span>
+        <span class="sr-desc">${esc(descFirst)}</span>
+        <span class="sr-price">${esc(priceStr)}</span>
+      `;
+      div.addEventListener('click',()=>{
+        closeSearch();
+        searchInput.value='';
+        addItemFromSearch(h.catId, h.item.id);
+      });
+      searchResults.appendChild(div);
+    });
+  }
+  searchResults.classList.add('open');
+  positionSearchResults();
+
+}
+
+function positionSearchResults(){
+  const box = document.querySelector('.search-box');
+  if(!box) return;
+  const r  = box.getBoundingClientRect();
+  const sr = document.getElementById('searchResults');
+  sr.style.maxHeight = Math.min(360, window.innerHeight - r.bottom - 16) + 'px';
+}
+
+function navigateToItem(catId, itemId){
+  openCategory(catId);
+  setTimeout(()=>{
+    const card=document.querySelector(`.item-card[data-id="${itemId}"]`);
+    if(card){
+      card.scrollIntoView({behavior:'smooth',block:'center'});
+      card.classList.add('highlight-flash');
+      setTimeout(()=>card.classList.remove('highlight-flash'),2000);
+    }
+  },350);
+}
+
+/* ─ 自訂新增項目卡片 ─────────────────────────────────────────────── */
+var _customCount=0;
+function appendCustomAddCard(grid,catLabel){
+  var card=document.createElement('div');
+  card.className='item-card custom-add-card';
+  card.innerHTML='<div style="font-size:26px;color:var(--accent)">＋</div>'
+    +'<div style="font-size:14px;font-weight:600;color:var(--accent)">新增自訂項目</div>';
+  card.addEventListener('click',function(e){
+    if(card.querySelector('.custom-add-input')) return; /* 已在編輯中，忽略 */
+    card.className='item-card'; card.style.cursor='default';
+    card.innerHTML='<div class="custom-add-form" style="width:100%">'
+      +'<input class="custom-add-input" type="text" placeholder="項目名稱" autocomplete="off">'
+      +'<input class="custom-add-input" type="number" placeholder="金額（元）" min="0">'
+      +'<div class="custom-add-btn-row">'
+      +'<button class="custom-add-confirm">確認加入</button>'
+      +'<button class="custom-add-cancel-btn">取消</button>'
+      +'</div></div>'; /* /custom-add-form */
+    var nameEl=card.querySelector('input[type="text"]');
+    var priceEl=card.querySelector('input[type="number"]');
+    /* 阻止 form 內所有點擊往上冒泡觸發 card click */
+    card.querySelector('.custom-add-form').addEventListener('click',function(ev){ev.stopPropagation();});
+    nameEl.focus();
+    card.querySelector('.custom-add-confirm').addEventListener('click',function(){
+      var name=nameEl.value.trim();
+      if(!name){nameEl.focus();return;}
+      var price=Math.max(0,parseInt(priceEl.value)||0);
+      var id='custom_'+(++_customCount);
+      cart.push({id:id,name:name,catLabel:catLabel,price:price,mode:'self',priceEdited:false});
+      renderCart(); if(currentCat) buildItemsGrid(currentCat);
+      showToast('✓ 已加入：'+name);
+    });
+    card.querySelector('.custom-add-cancel-btn').addEventListener('click',function(){
+      if(currentCat) buildItemsGrid(currentCat);
+    });
+    nameEl.addEventListener('keydown',function(e){if(e.key==='Enter')priceEl.focus();});
+    priceEl.addEventListener('keydown',function(e){if(e.key==='Enter')card.querySelector('.custom-add-confirm').click();});
+  });
+  grid.appendChild(card);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BUILD HOME
+   ═══════════════════════════════════════════════════════════════════ */
+function buildHome(){
+  const grid=document.getElementById('catGrid');
+  grid.innerHTML='';
+  CATEGORIES.forEach(cat=>{
+    const card=document.createElement('div');
+    card.className='cat-card';
+    card.innerHTML=`
+      <div class="cat-icon">${ICONS[cat.id]}</div>
+      <div class="cat-label">${cat.label}</div>
+      <div class="cat-count-badge">${cat.items.filter(i=>!i.type).length} 項</div>
+    `;
+    card.addEventListener('click',()=>openCategory(cat.id));
+    grid.appendChild(card);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   NAVIGATION
+   ═══════════════════════════════════════════════════════════════════ */
+const emojiMap={'health-check':'🩺','lab':'🧪','exam':'🔬','endo':'🔭','drip':'💧'};
+
+function openCategory(catId){
+  const cat=CATEGORIES.find(c=>c.id===catId);
+  if(!cat) return;
+  currentCat=cat;
+  if(cat.id==='endo'){endoDepth=0;endoL1=null;endoL2=null;}
+  document.getElementById('catIconEl').textContent=emojiMap[cat.id]||'';
+  document.getElementById('catTitleEl').textContent=cat.label;
+  document.getElementById('catDescEl').textContent=cat.desc;
+  buildItemsGrid(cat);
+  const home=document.getElementById('screen-home');
+  const catScreen=document.getElementById('screen-category');
+  home.classList.remove('active'); home.classList.add('exit');
+  setTimeout(()=>home.classList.remove('exit'),320);
+  catScreen.classList.add('active');
+}
+
+function goHome(){
+  document.getElementById('screen-category').classList.remove('active');
+  document.getElementById('screen-home').classList.add('active');
+  currentCat=null;
+}
+document.getElementById('backBtn').addEventListener('click',goHome);
+
+/* ═══════════════════════════════════════════════════════════════════
+   BUILD ITEMS GRID
+   ═══════════════════════════════════════════════════════════════════ */
+function buildItemsGrid(cat){
+  if(cat.id==='endo'){buildEndoGrid();return;}
+  const grid=document.getElementById('itemsGrid');
+  grid.innerHTML='';
+  /* 點滴：第一順位 */
+  if(cat.id==='drip') appendCustomAddCard(grid,cat.label);
+  cat.items.forEach(item=>{
+    if(item.type==='section'){
+      /* 檢驗：在「一般生化檢查」之前插入（= 檢驗套組最後一位） */
+      if(cat.id==='lab'&&item.id==='lb_s0') appendCustomAddCard(grid,cat.label);
+      const hdr=document.createElement('div');
+      hdr.className='items-section-header';
+      hdr.textContent=item.name;
+      grid.appendChild(hdr);
+      return;
+    }
+    const inCart=cart.find(c=>c.id===item.id);
+    const mode=inCart?inCart.mode:'self';
+    const sel=!!inCart, isIns=sel&&mode==='ins';
+    const hasNotes=!!ITEM_NOTES[item.id];
+
+    const card=document.createElement('div');
+    card.className='item-card'+(isIns?' ins-mode':sel?' selected':'');
+    card.dataset.id=item.id;
+
+    let priceHtml;
+    if(isIns) priceHtml=`<span class="price-val ins-price">免自費</span>`;
+    else if(item.price>0) priceHtml=`<span class="price-currency">NT$</span><span class="price-val">${fmtPrice(item.price)}</span>`;
+    else priceHtml=`<span class="price-val tbd">待建檔</span>`;
+
+    const descHtml = nl2br(item.desc||'');
+
+    card.innerHTML=`
+      <div class="mode-badge ${isIns?'ins':'self'}">${isIns?'免自費':'自費'}</div>
+      <div class="item-name">${esc(item.name).replace(' + ','<br>+ ')}</div>
+      <div class="item-desc">${descHtml}</div>
+      <div class="item-price-row">${priceHtml}</div>
+      ${hasNotes?'<div class="notes-hint">📋 停留 2 秒查看備註</div>':''}
+      <div class="check-dot">✓</div>
+    `;
+
+    card.addEventListener('click',      e=>{e.preventDefault();toggleItem(item,'self');});
+    if(cat.id!=='health-check') card.addEventListener('contextmenu',e=>{e.preventDefault();toggleItem(item,'ins');});
+    grid.appendChild(card);
+  });
+  /* 檢查及處置：其他檢查最後一位（= grid 最末） */
+  if(cat.id==='exam') appendCustomAddCard(grid,cat.label);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BUILD ENDO GRID
+   ═══════════════════════════════════════════════════════════════════ */
+/* ─ 內視鏡主鏡互斥群組 ────────────────────────────────── */
+var SCOPE_PFX=['en_gastro','en_colon','en_gc_ins','en_gc_self'];
+function isScopeItem(id){return SCOPE_PFX.some(function(p){return id===p||id.startsWith(p+'|');});}
+
+/* L1 右鍵切換自費/免自費（三層彼此獨立） */
+function toggleScopeItem(it,mode){
+  var pfx=SCOPE_PFX.find(function(p){return it.id===p||it.id.startsWith(p+'|');});
+  var idx=cart.findIndex(function(x){return x.id===it.id;});
+  if(idx!==-1){
+    /* 已在清單：自費↔免自費互換 */
+    if(cart[idx].mode==='ins'){
+      cart[idx].mode='self'; cart[idx].price=it._basePrice||it.price;
+      showToast('切換為自費：'+it.name);
+    } else {
+      cart[idx].mode='ins'; cart[idx].price=0;
+      showToast('切換為免自費：'+it.name);
+    }
+  } else {
+    /* 未在清單：清除其他鏡種 L1，保留同鏡種 L2+L3，加入免自費 */
+    cart=cart.filter(function(x){
+      var xp=SCOPE_PFX.find(function(p){return x.id===p||x.id.startsWith(p+'|');});
+      return !xp||xp===pfx;
+    });
+    /* 防重複：再次確保此 L1 不在清單 */
+    cart=cart.filter(function(x){return x.id!==it.id;});
+    cart.push({id:it.id,name:it.name,catLabel:'內視鏡',price:0,mode:'ins',priceEdited:false,_basePrice:it._basePrice||it.price});
+    showToast('✓ 已加入（免自費）：'+it.name);
+  }
+  renderCart(); if(currentCat) buildItemsGrid(currentCat);
+}
+
+/* ─ L2 群組判斷 ─────────────────────────────────────────────────── */
+/* 鏡頭類型（三選一）*/
+function isScopeTypeL2(l2id){ return l2id.endsWith('_s')||l2id.endsWith('_to')||l2id.endsWith('_tn'); }
+/* 幽門桿菌（可額外加選）*/
+function isHpL2(l2id){ return l2id.endsWith('_hp'); }
+/* 大腸鏡代餐（二選一）*/
+function isColonPrepL2(l2id){ return l2id.endsWith('_j')||l2id.endsWith('_t'); }
+/* 組合鏡 L1 ID */
+var COMBO_L1_IDS=['en_gc_ins','en_gc_self'];
+
+/* 幽門桿菌直接加選/取消（不需選鎮靜層） */
+function toggleHpItem(l1obj,l2obj){
+  var hpFid=l1obj.id+'|'+l2obj.id;
+  var idx=cart.findIndex(function(x){return x.id===hpFid;});
+  if(idx!==-1){
+    cart.splice(idx,1);
+    var l1Idx=cart.findIndex(function(x){return x.id===l1obj.id&&x._autoAdded;});
+    if(l1Idx!==-1){
+      var hasOtherSubs=cart.some(function(x){return x.id.startsWith(l1obj.id+'|');});
+      if(!hasOtherSubs) cart.splice(l1Idx,1);
+    }
+    showToast('已移除：'+l2obj.name);
+  } else {
+    if(!cart.find(function(x){return x.id===l1obj.id;})){
+      cart.push({id:l1obj.id,name:l1obj.name,catLabel:'內視鏡',
+                 price:l1obj.basePrice,mode:'self',priceEdited:false,
+                 _autoAdded:true,_basePrice:l1obj.basePrice});
+    }
+    cart.push({id:hpFid,name:l2obj.name,catLabel:'內視鏡',
+               price:l2obj.addPrice,mode:'self',priceEdited:false});
+    showToast('✓ 已加入：'+l2obj.name);
+  }
+  renderCart(); if(currentCat) buildItemsGrid(currentCat);
+}
+
+/* 組合鏡代餐直接選取/取消（二選一互斥，不需選鎮靜層） */
+function toggleColonPrepItem(l1obj,l2obj){
+  var cpFid=l1obj.id+'|'+l2obj.id;
+  var idx=cart.findIndex(function(x){return x.id===cpFid;});
+  if(idx!==-1){
+    cart.splice(idx,1);
+    var l1Idx=cart.findIndex(function(x){return x.id===l1obj.id&&x._autoAdded;});
+    if(l1Idx!==-1){
+      var hasOtherSubs=cart.some(function(x){return x.id.startsWith(l1obj.id+'|');});
+      if(!hasOtherSubs) cart.splice(l1Idx,1);
+    }
+    showToast('已移除：'+l2obj.name);
+  } else {
+    /* 清除同 L1 下其他代餐選項（二選一互斥） */
+    cart=cart.filter(function(x){
+      if(!x.id.startsWith(l1obj.id+'|')) return true;
+      var xL2id=x.id.split('|')[1];
+      return !isColonPrepL2(xL2id);
+    });
+    if(!cart.find(function(x){return x.id===l1obj.id;})){
+      cart.push({id:l1obj.id,name:l1obj.name,catLabel:'內視鏡',
+                 price:l1obj.basePrice,mode:'self',priceEdited:false,
+                 _autoAdded:true,_basePrice:l1obj.basePrice});
+    }
+    cart.push({id:cpFid,name:l2obj.name,catLabel:'內視鏡',
+               price:l2obj.addPrice,mode:'self',priceEdited:false});
+    showToast('✓ 已加入：'+l2obj.name);
+  }
+  renderCart(); if(currentCat) buildItemsGrid(currentCat);
+}
+
+/* 鏡頭類型直接切換（三選一互斥） */
+function toggleScopeTypeItem(l1obj,l2obj){
+  var sfid=l1obj.id+'|'+l2obj.id;
+  var idx=cart.findIndex(function(x){return x.id===sfid;});
+  if(idx!==-1){
+    cart.splice(idx,1);
+    var l1Idx=cart.findIndex(function(x){return x.id===l1obj.id&&x._autoAdded;});
+    if(l1Idx!==-1){
+      var hasOtherSubs=cart.some(function(x){return x.id.startsWith(l1obj.id+'|');});
+      if(!hasOtherSubs) cart.splice(l1Idx,1);
+    }
+    showToast('已移除：'+l2obj.name);
+  } else {
+    cart=cart.filter(function(x){
+      if(!x.id.startsWith(l1obj.id+'|')) return true;
+      var xL2id=x.id.split('|')[1];
+      return !isScopeTypeL2(xL2id);
+    });
+    if(!cart.find(function(x){return x.id===l1obj.id;})){
+      cart.push({id:l1obj.id,name:l1obj.name,catLabel:'內視鏡',
+                 price:l1obj.basePrice,mode:'self',priceEdited:false,
+                 _autoAdded:true,_basePrice:l1obj.basePrice});
+    }
+    cart.push({id:sfid,name:l2obj.name,catLabel:'內視鏡',
+               price:l2obj.addPrice,mode:'self',priceEdited:false});
+    showToast('✓ 已加入：'+l2obj.name);
+  }
+  renderCart(); if(currentCat) buildItemsGrid(currentCat);
+}
+
+/* 鎨靜/麻醉直接切換（三選一互斥） */
+function isSedationL3(l3id){ return l3id.endsWith('_w')||l3id.endsWith('_l')||l3id.endsWith('_a'); }
+function toggleSedationItem(l1obj,l3obj){
+  var l3fid=l1obj.id+'|'+l3obj.id;
+  var idx=cart.findIndex(function(x){return x.id===l3fid;});
+  if(idx!==-1){
+    cart.splice(idx,1);
+    var l1Idx=cart.findIndex(function(x){return x.id===l1obj.id&&x._autoAdded;});
+    if(l1Idx!==-1){
+      var hasOtherSubs=cart.some(function(x){return x.id.startsWith(l1obj.id+'|');});
+      if(!hasOtherSubs) cart.splice(l1Idx,1);
+    }
+    showToast('已移除：'+l3obj.name);
+  } else {
+    cart=cart.filter(function(x){
+      if(!x.id.startsWith(l1obj.id+'|')) return true;
+      var xSubId=x.id.split('|')[1];
+      return !isSedationL3(xSubId);
+    });
+    if(!cart.find(function(x){return x.id===l1obj.id;})){
+      cart.push({id:l1obj.id,name:l1obj.name,catLabel:'內視鏡',
+                 price:l1obj.basePrice,mode:'self',priceEdited:false,
+                 _autoAdded:true,_basePrice:l1obj.basePrice});
+    }
+    cart.push({id:l3fid,name:l3obj.name,catLabel:'內視鏡',
+               price:l3obj.addPrice,mode:'self',priceEdited:false});
+    showToast('✓ 已加入：'+l3obj.name);
+  }
+  renderCart(); if(currentCat) buildItemsGrid(currentCat);
+}
+
+/* L3 點選：鎨頭類型及代餐選項加入清單（幽門桿菌不走此路） */
+/* 鏡頭類型三選一；幽門桿菌可額外加；代餐二選一；各群組獨立互斥 */
+function addL3Item(l1obj,l2obj,l3obj){
+  var fid=l1obj.id+'|'+l2obj.id+'|'+l3obj.id;
+  var fname=l2obj.name+' / '+l3obj.name;
+  var l2l3price=l2obj.addPrice+l3obj.addPrice;
+  var existIdx=cart.findIndex(function(x){return x.id===fid;});
+  if(existIdx!==-1){
+    /* 再點一次：移除；若 L1 是自動加入且無其他子項，一併移除 */
+    cart.splice(existIdx,1);
+    var l1Idx=cart.findIndex(function(x){return x.id===l1obj.id&&x._autoAdded;});
+    if(l1Idx!==-1){
+      var hasOtherSubs=cart.some(function(x){return x.id.startsWith(l1obj.id+'|');});
+      if(!hasOtherSubs) cart.splice(l1Idx,1);
+    }
+    showToast('已移除：'+l3obj.name);
+  } else {
+    /* 清除其他鏡種 */
+    cart=cart.filter(function(x){
+      var xp=SCOPE_PFX.find(function(p){return x.id===p||x.id.startsWith(p+'|');});
+      return !xp||xp===l1obj.id;
+    });
+    /* 依群組互斥清除同鏡種舊選項；幽門桿菌（HP）永遠保留 */
+    var newIsScopeType=isScopeTypeL2(l2obj.id);
+    var newIsColonPrep=isColonPrepL2(l2obj.id);
+    cart=cart.filter(function(x){
+      if(!x.id.startsWith(l1obj.id+'|')) return true;
+      var xL2id=x.id.split('|')[1];
+      if(isHpL2(xL2id)) return true;          /* HP 永遠保留 */
+      if(newIsScopeType) return !isScopeTypeL2(xL2id); /* 鏡頭互斥 */
+      if(newIsColonPrep) return !isColonPrepL2(xL2id); /* 代餐互斥 */
+      return false;
+    });
+    /* 自動加入 L1 */
+    if(!cart.find(function(x){return x.id===l1obj.id;})){
+      cart.push({id:l1obj.id,name:l1obj.name,catLabel:'內視鏡',
+                 price:l1obj.basePrice,mode:'self',priceEdited:false,
+                 _autoAdded:true,_basePrice:l1obj.basePrice});
+    }
+    cart.push({id:fid,name:fname,catLabel:'內視鏡',price:l2l3price,mode:'self',priceEdited:false});
+    showToast('✓ 已加入（自費）：'+l3obj.name);
+  }
+  renderCart(); if(currentCat) buildItemsGrid(currentCat);
+}
+
+function buildEndoGrid(){
+  var grid=document.getElementById('itemsGrid');
+  grid.innerHTML='';
+
+  var h1=document.createElement('div'); h1.className='items-section-header'; h1.textContent='常規內視鏡'; grid.appendChild(h1);
+  ENDO_TREE.layer1.forEach(function(l1){
+    var canIns=(l1.id==='en_gastro'||l1.id==='en_colon');
+    var isOpen=!!(endoL1&&endoL1.id===l1.id);
+    var directIns=canIns?cart.find(function(x){return x.id===l1.id&&x.mode==='ins';}):null;
+    var subSelf=cart.find(function(x){return x.id.startsWith(l1.id+'|');});
+    var anyInCart=directIns||subSelf; var isIns=!!directIns;
+    var l1c=document.createElement('div');
+    var l1cls='item-card endo-nav';
+    if(isIns) l1cls+=' endo-ins';
+    else if(isOpen) l1cls+=' endo-open';
+    if(endoL1!==null&&!isOpen) l1cls+=' endo-dimmed';
+    l1c.className=l1cls; l1c.style.position='relative';
+    l1c.dataset.id=l1.id;  /* 啟用 hover tooltip */
+    var l1price=isIns
+      ?'<div class="item-price-row"><span class="price-val" style="color:var(--ins-color);font-size:15px">免自費</span></div>'
+      :'<div class="item-price-row"><span class="price-currency">NT$</span><span class="price-val">'+fmtPrice(l1.basePrice)+' 起</span></div>';
+    l1c.innerHTML='<div class="mode-badge '+(isIns?'ins':'self')+'">'+(isIns?'免自費':'自費')+'</div>'
+      +'<div class="item-name">'+esc(l1.name)+'</div>'
+      +l1price
+      +'<div class="endo-nav-arrow">'+(isOpen?'▾':'›')+'</div>';
+    l1c.onclick=function(){
+      if(endoL1&&endoL1.id===l1.id){
+        endoL1=null;endoL2=null;
+      } else {
+        /* 切換到新 L1：清除其他鏡種的 cart 內容 */
+        cart=cart.filter(function(x){
+          var xp=SCOPE_PFX.find(function(p){return x.id===p||x.id.startsWith(p+'|');});
+          return !xp||xp===l1.id;
+        });
+        endoL1=l1;endoL2=null;
+      }
+      renderCart();buildEndoGrid();
+    };
+    if(canIns)(function(l){l1c.addEventListener('contextmenu',function(e){
+      e.preventDefault(); toggleScopeItem({id:l.id,name:l.name,price:l.basePrice,_basePrice:l.basePrice},'ins');
+    });})(l1);
+    grid.appendChild(l1c);
+    if(isOpen){
+      /* ── L2 層：每個按鈕獨立，直接切換加入 ── */
+      var l2row=document.createElement('div'); l2row.className='endo-sub-row';
+      var l2g=document.createElement('div'); l2g.className='endo-sub-grid';
+      l1.layer2.forEach(function(l2){
+        var l2c=document.createElement('div'); l2c.style.position='relative';
+        if(isHpL2(l2.id)){
+          var hpFid=l1.id+'|'+l2.id;
+          var hpSel=!!cart.find(function(x){return x.id===hpFid;});
+          l2c.className='item-card'+(hpSel?' selected':'');
+          l2c.innerHTML='<div class="mode-badge self">自費</div>'
+            +'<div class="item-name">'+esc(l2.name)+'</div>'
+            +'<div class="item-desc">'+esc(l2.desc||'')+'</div>'
+            +'<div class="endo-add-price">+ NT\u00a0'+fmtPrice(l2.addPrice)+'</div>'
+            +'<div class="check-dot">✓</div>';
+          (function(l1o,l2o){l2c.onclick=function(){toggleHpItem(l1o,l2o);};})(l1,l2);
+        } else if(isColonPrepL2(l2.id)){
+          var cpFid=l1.id+'|'+l2.id;
+          var cpSel=!!cart.find(function(x){return x.id===cpFid;});
+          l2c.className='item-card'+(cpSel?' selected':'');
+          l2c.innerHTML='<div class="mode-badge self">自費</div>'
+            +'<div class="item-name">'+(l2.name.length>4?esc(l2.name.slice(0,4))+'<br>'+esc(l2.name.slice(4)):esc(l2.name))+'</div>'
+            +'<div class="item-desc">'+esc(l2.desc||'')+'</div>'
+            +'<div class="endo-add-price">+ NT\u00a0'+fmtPrice(l2.addPrice)+'</div>'
+            +'<div class="check-dot">✓</div>';
+          (function(l1o,l2o){l2c.onclick=function(){toggleColonPrepItem(l1o,l2o);};})(l1,l2);
+        } else {
+          var sfid=l1.id+'|'+l2.id;
+          var ssel=!!cart.find(function(x){return x.id===sfid;});
+          l2c.className='item-card'+(ssel?' selected':'');
+          l2c.innerHTML='<div class="mode-badge self">自費</div>'
+            +'<div class="item-name">'+(l2.name.length>4?esc(l2.name.slice(0,4))+'<br>'+esc(l2.name.slice(4)):esc(l2.name))+'</div>'
+            +'<div class="item-desc">'+esc(l2.desc||'')+'</div>'
+            +'<div class="endo-add-price">+ NT\u00a0'+fmtPrice(l2.addPrice)+'</div>'
+            +'<div class="check-dot">✓</div>';
+          (function(l1o,l2o){l2c.onclick=function(){toggleScopeTypeItem(l1o,l2o);};})(l1,l2);
+        }
+        l2g.appendChild(l2c);
+      });
+      l2row.appendChild(l2g); grid.appendChild(l2row);
+      /* ── L3 層：鎨靜/麻醉，永遠顯示，三選一互斥 ── */
+      var l3row=document.createElement('div'); l3row.className='endo-sub-row l3';
+      var l3g=document.createElement('div'); l3g.className='endo-sub-grid';
+      l1.layer3.forEach(function(l3){
+        var l3fid=l1.id+'|'+l3.id;
+        var l3sel=!!cart.find(function(x){return x.id===l3fid;});
+        var l3c=document.createElement('div'); l3c.className='item-card'+(l3sel?' selected':'');
+        l3c.innerHTML='<div class="mode-badge self">自費</div>'
+          +'<div class="item-name">'+esc(l3.name)+'</div>'
+          +'<div class="item-price-row"><span class="price-currency">NT$</span><span class="price-val">'+fmtPrice(l3.addPrice)+'</span></div>'
+          +'<div class="check-dot">✓</div>';
+        (function(l1o,l3o){l3c.addEventListener('click',function(e){e.preventDefault();toggleSedationItem(l1o,l3o);});})(l1,l3);
+        l3g.appendChild(l3c);
+      });
+      l3row.appendChild(l3g); grid.appendChild(l3row);
+    }
+  });
+  var h2=document.createElement('div'); h2.className='items-section-header'; h2.textContent='內視鏡處置'; grid.appendChild(h2);
+  ENDO_TREE.special.forEach(function(sp){
+    var ic=cart.find(function(x){return x.id===sp.id;});
+    var isIns=ic&&ic.mode==='ins', sel=!!ic;
+    var sc=document.createElement('div'); sc.className='item-card'+(isIns?' ins-mode':sel?' selected':''); sc.dataset.id=sp.id;
+    sc.innerHTML='<div class="mode-badge '+(isIns?'ins':'self')+'">'+(isIns?'免自費':'自費')+'</div>'
+      +'<div class="item-name">'+esc(sp.name).replace(/^([A-Z]+) /,'$1<br>')+'</div><div class="item-desc">'+esc(sp.desc)+'</div>'
+      +'<div class="item-price-row"><span class="price-currency">NT$</span><span class="price-val">'+fmtPrice(sp.price)+'</span></div>'
+      +'<div class="check-dot">✓</div>';
+    (function(it){sc.addEventListener('click',function(e){e.preventDefault();toggleItem(it,'self');});
+     sc.addEventListener('contextmenu',function(e){e.preventDefault();toggleItem(it,'ins');});})(
+      {id:sp.id,name:sp.name,price:sp.price});
+    grid.appendChild(sc);
+  });
+  /* 自訂新增按鈕（內視鏡） */
+  appendCustomAddCard(grid,'內視鏡');
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TOGGLE ITEM
+   ═══════════════════════════════════════════════════════════════════ */
+/* 健檢 A-E 互斥群組（同時只能選一項） */
+const HC_RADIO = new Set(['hc1','hc2','hc3','hc4','hc5']);
+
+function toggleItem(item, clickMode){
+  const idx=cart.findIndex(c=>c.id===item.id);
+  if(idx===-1){
+    // 健檢套組互斥：加入前先移除其他同群組項目
+    if(HC_RADIO.has(item.id)) cart=cart.filter(c=>!HC_RADIO.has(c.id));
+    cart.push({id:item.id,name:item.name,catLabel:currentCat?currentCat.label:'',
+               price:item.price,mode:clickMode,priceEdited:false});
+    showToast(`✓ 已加入（${clickMode==='ins'?'免自費':'自費'}）：${item.name}`);
+  } else {
+    const ex=cart[idx];
+    if(clickMode==='self'){
+      if(ex.mode==='ins'){ cart[idx].mode='self'; showToast(`切換為自費：${item.name}`); }
+      else { cart.splice(idx,1); showToast(`已移除：${item.name}`); }
+    } else {
+      cart[idx].mode=ex.mode==='ins'?'self':'ins';
+      showToast(`切換為${cart[idx].mode==='ins'?'免自費':'自費'}：${item.name}`);
+    }
+  }
+  renderCart();
+  if(currentCat) buildItemsGrid(currentCat);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   EDITABLE PRICE
+   ═══════════════════════════════════════════════════════════════════ */
+function startEditPrice(el, itemId){
+  const item=cart.find(c=>c.id===itemId);
+  if(!item||item.mode==='ins') return;
+
+  const input=document.createElement('input');
+  input.type='number'; input.className='price-edit-input';
+  input.value=item.price||0; input.min=0;
+  el.replaceWith(input);
+  input.focus(); input.select();
+
+  function save(){
+    const val=Math.max(0,parseInt(input.value)||0);
+    item.price=val; item.priceEdited=true;
+    renderCart();
+    if(currentCat) buildItemsGrid(currentCat);
+  }
+  input.addEventListener('blur',save);
+  input.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){ e.preventDefault(); save(); }
+    if(e.key==='Escape') renderCart();
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RENDER CART
+   ═══════════════════════════════════════════════════════════════════ */
+function renderCart(){
+  const cartList=document.getElementById('cartList');
+  const discountBlock=document.getElementById('discountBlock');
+  const emptyState=document.getElementById('emptyState');
+  const cartCount=document.getElementById('cartCount');
+
+  cartList.innerHTML=''; discountBlock.innerHTML='';
+
+  if(cart.length===0){
+    emptyState.style.display='';
+    cartCount.textContent='0'; cartCount.classList.add('zero');
+    document.getElementById('selfTotal').textContent='NT$ 0';
+    document.getElementById('insCount').textContent='0 項';
+    document.getElementById('discountTotal').textContent='— NT$ 0';
+    document.getElementById('grandTotal').textContent='0';
+    return;
+  }
+  emptyState.style.display='none';
+  cartCount.textContent=String(cart.length);
+  cartCount.classList.remove('zero');
+
+  // Group by category
+  const groups={};
+  cart.forEach(item=>{ if(!groups[item.catLabel]) groups[item.catLabel]=[]; groups[item.catLabel].push(item); });
+
+  Object.entries(groups).forEach(([cat,items])=>{
+    if(cat){ const lbl=document.createElement('div'); lbl.className='cart-group-label'; lbl.textContent=cat; cartList.appendChild(lbl); }
+    items.forEach(item=>{
+      const row=document.createElement('div'); row.className='cart-item';
+      const notes=ITEM_NOTES[item.id]||'';
+
+      let priceEl;
+      if(item.mode==='ins'){
+        priceEl=`<span class="cart-item-price ins-p">免自費</span><span class="price-edit-hint ins-hint"></span>`;
+      } else {
+        const isEndoItem=item.catLabel==='內視鏡';
+        const isTbd=item.price===0&&!isEndoItem;
+        const cls='cart-item-price'+(item.priceEdited?' edited':'')+(isTbd?' tbd':'');
+        const label=item.price>0?`NT$ ${fmtPrice(item.price)}`:isTbd?'待建檔':'NT$ 0';
+        priceEl=`
+          <span class="${cls}" data-id="${item.id}">${label}</span>
+          <span class="price-edit-hint">點擊修改金額</span>`;
+      }
+
+      // Notes block for print
+      const notesBlock = notes
+        ? `<div class="cart-notes-print">
+             <div class="cart-notes-print-title">包含項目</div>
+             ${notes.split('\n').map(l=>`• ${esc(l)}`).join('<br>')}
+           </div>`
+        : '';
+
+      const catDisplay=item.catLabel==='內視鏡'&&item.id.includes('|')?'耗材及鎮靜/麻醉':item.catLabel;
+      row.innerHTML=`
+        <div class="cart-item-body">
+          <div class="cart-item-name">${esc(item.name)}</div>
+          <div class="cart-item-meta">
+            <span class="cart-badge ${item.mode==='ins'?'ins':'self'}">${item.mode==='ins'?'免自費':'自費'}</span>
+            <span class="cart-item-cat">${esc(catDisplay)}</span>
+          </div>
+          ${notesBlock}
+        </div>
+        <div class="cart-price-wrap">${priceEl}</div>
+        <button class="cart-remove-btn" data-id="${item.id}" title="移除">×</button>
+      `;
+
+      // Bind editable price
+      const priceSpan=row.querySelector('.cart-item-price:not(.ins-p)');
+      if(priceSpan) priceSpan.addEventListener('click',()=>startEditPrice(priceSpan,item.id));
+
+      row.querySelector('.cart-remove-btn').addEventListener('click',e=>removeItem(e.currentTarget.dataset.id));
+      // 右鍵切換自費/健保
+      row.addEventListener('contextmenu', e=>{
+        e.preventDefault();
+        const it=cart.find(c=>c.id===item.id);
+        if(!it) return;
+        it.mode = it.mode==='ins' ? 'self' : 'ins';
+        showToast(`切換為${it.mode==='ins'?'免自費':'自費'}：${it.name}`);
+        renderCart();
+        if(currentCat) buildItemsGrid(currentCat);
+      });
+      cartList.appendChild(row);
+    });
+  });
+
+  // Totals
+  const selfItems=cart.filter(i=>i.mode==='self');
+  const insItems=cart.filter(i=>i.mode==='ins');
+  const selfSum=selfItems.reduce((s,i)=>s+(i.price||0),0);
+
+  // Discounts
+  const activeAll=DISCOUNT_RULES.filter(r=>r.check(cart)&&r.discount>0);
+  const dripBest=activeAll.filter(d=>d.id.startsWith('disc-drip')).sort((a,b)=>b.discount-a.discount)[0];
+  const usBest  =activeAll.filter(d=>d.id.startsWith('disc-us')).sort((a,b)=>b.discount-a.discount)[0];
+  const finalDiscs=[
+    ...activeAll.filter(d=>!d.id.startsWith('disc-drip')&&!d.id.startsWith('disc-us')),
+    ...(dripBest?[dripBest]:[]),
+    ...(usBest?[usBest]:[])
+  ];
+  let totalDiscount=0;
+
+  if(finalDiscs.length>0){
+    const block=document.createElement('div'); block.className='discount-block';
+    finalDiscs.forEach(d=>{
+      totalDiscount+=d.discount;
+      const r=document.createElement('div'); r.className='discount-row';
+      r.innerHTML=`<span class="discount-name">${esc(d.name)}</span>
+                   <span class="discount-amt">— NT$ ${fmtPrice(d.discount)}</span>`;
+      block.appendChild(r);
+    });
+    discountBlock.appendChild(block);
+  }
+
+  const grand=Math.max(0,selfSum-totalDiscount-paidAmount);
+  const allTbd=selfSum===0&&selfItems.some(i=>i.price===0&&i.catLabel!=='內視鏡');
+  document.getElementById('selfTotal').textContent=allTbd?'待建檔':`NT$ ${fmtPrice(selfSum)}`;
+  document.getElementById('insCount').textContent=`${insItems.length} 項`;
+  document.getElementById('discountTotal').textContent=totalDiscount>0?`— NT$ ${fmtPrice(totalDiscount)}`:'— NT$ 0';
+  document.getElementById('grandTotal').textContent=allTbd?'待建檔':fmtPrice(grand);
+  (function(){
+    var hasEndo=cart.some(function(c){return c.catLabel==='內視鏡';});
+    var hasHcDE=cart.some(function(c){return c.id==='hc4'||c.id==='hc5';});
+    var noteEl=document.getElementById('endoNote');
+    if(noteEl) noteEl.classList.toggle('active',hasEndo||hasHcDE);
+  })();
+}
+
+function removeItem(id){
+  const item=cart.find(c=>c.id===id); cart=cart.filter(c=>c.id!==id);
+  if(item) showToast(`已移除：${item.name}`);
+  renderCart(); if(currentCat) buildItemsGrid(currentCat);
+}
+
+document.getElementById('btnClear').addEventListener('click',()=>{
+  if(!cart.length) return; cart=[]; renderCart(); if(currentCat) buildItemsGrid(currentCat);
+  showToast('已清除所有項目');
+});
+
+/* ═══════════════════════════════════════════════════════════════════
+   BANNER DATE
+   ═══════════════════════════════════════════════════════════════════ */
+function updateDate(){
+  const n=new Date();
+  document.getElementById('bannerDate').innerHTML=
+    n.toLocaleDateString('zh-TW',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+}
+updateDate();
+
+/* 稱謂同步 */
+(function(){
+  var pi=document.getElementById('patientNameInput');
+  var ln=document.getElementById('letterPatientName');
+  if(pi&&ln) pi.addEventListener('input',function(){ln.textContent=pi.value.trim()||'___';});
+})();
+
+/* 視窗縮放時重新定位搜尋結果 */
+window.addEventListener('resize', function(){
+  if(document.getElementById('searchResults').classList.contains('open'))
+    positionSearchResults();
+});
+
+/* 已付金額 */
+var paidAmount=0;
+
+function bindPaidDisplay(){
+  var el=document.getElementById('paidDisplay');
+  if(!el) return;
+  el.addEventListener('click',function(){
+    var input=document.createElement('input');
+    input.type='number'; input.min='0'; input.className='price-edit-input';
+    input.style.color='var(--gold)'; input.value=paidAmount||'';
+    el.replaceWith(input); input.focus(); input.select();
+    function save(){
+      paidAmount=Math.max(0,parseInt(input.value)||0);
+      var span=document.createElement('span');
+      span.id='paidDisplay'; span.className='paid-display'+(paidAmount?'' : '');
+      span.textContent='— NT$ '+fmtPrice(paidAmount);
+      input.replaceWith(span);
+      bindPaidDisplay(); renderCart();
+    }
+    input.addEventListener('blur',save);
+    input.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key==='Escape')save();});
+  });
+}
+
+document.getElementById('paidToggle').addEventListener('click',function(){
+  var row=document.getElementById('paidRow');
+  var tog=document.getElementById('paidToggle');
+  var isOpen=row.style.display!=='none';
+  row.style.display=isOpen?'none':'';
+  tog.classList.toggle('open',!isOpen);
+  if(isOpen){paidAmount=0;var d=document.getElementById('paidDisplay');if(d)d.textContent='— NT$ 0';renderCart();}
+});
+
+bindPaidDisplay();
+
+/* Init */
+buildHome(); renderCart();
+</script>
+</body>
+</html>
