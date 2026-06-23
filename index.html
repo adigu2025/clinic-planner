@@ -1401,9 +1401,9 @@ const DISCOUNT_RULES = [
     check:c=>c.filter(i=>i.id.startsWith('dr')).length>=3 },
   // 超音波複選優惠 (取最優一組，不疊加)
   { id:'disc-us-2', name:'雙項超音波優惠', note:'複選任意2項超音波折價200', discount:200,
-    check:c=>c.filter(i=>['ex1','ex2','ex3'].includes(i.id)).length>=2 },
+    check:c=>c.filter(i=>['ex1','ex2','ex3'].includes(i.id)&&i.mode!=='ins').length>=2 },
   { id:'disc-us-3', name:'三項超音波優惠', note:'複選三項超音波折價400', discount:400,
-    check:c=>c.filter(i=>['ex1','ex2','ex3'].includes(i.id)).length>=3 },
+    check:c=>c.filter(i=>['ex1','ex2','ex3'].includes(i.id)&&i.mode!=='ins').length===3 },
 ];
 
 /* ═══════════════════════════════════════════════════════════════════
