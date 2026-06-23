@@ -435,12 +435,12 @@ body {
   vertical-align: middle;
 }
 .paid-toggle.open { transform: rotate(90deg); }
-.paid-display {
+.paid-display, .discount-display {
   font-size: 14px; font-weight: 600; color: var(--gold);
   cursor: pointer; border-radius: 4px; padding: 1px 5px;
   transition: background 0.15s;
 }
-.paid-display:hover { background: rgba(217,119,6,0.08); }
+.paid-display:hover, .discount-display:hover { background: rgba(217,119,6,0.08); }
 .paid-display.edited { opacity: 0.85; }
 .btn-clear, .btn-print {
   flex: 1; padding: 10px; border-radius: 20px; cursor: pointer;
@@ -603,7 +603,8 @@ body {
     font-family: "標楷體", "DFKai-SB", "BiauKai", serif !important;
     font-size: 13.5px; line-height: 2.2; color: #1B2B38;
   }
-  .letter-intro { padding: 6mm 18mm 6mm; }
+  .letter-intro { padding: 5mm 18mm 2mm; }
+  .letter-body { margin-top: 0; margin-bottom: 0; }
   .letter-close { padding: 0 18mm 4mm; line-height: 1.7 !important; }
   .letter-greeting { font-size: 19.7px; margin-bottom: 2px; }
   .letter-remark { margin: 0; }
@@ -620,7 +621,7 @@ body {
   .layout {
     display: block !important;
     height: auto !important; overflow: visible !important;
-    padding: 0 18mm 7mm;
+    padding: 0 18mm 4mm;
   }
   .pricing-panel {
     display: block !important;
@@ -629,8 +630,8 @@ body {
     height: auto !important; overflow: visible !important;
   }
   .panel-head { display: none !important; }
-  .panel-body { overflow: visible !important; height: auto !important; max-height: none !important; padding-top: 0 !important; }
-  .panel-foot { page-break-before: avoid; break-before: avoid; padding-bottom: 4px !important; }
+  .panel-body { overflow: visible !important; height: auto !important; max-height: none !important; padding-top: 0 !important; padding-bottom: 3px !important; }
+  .panel-foot { page-break-before: avoid; break-before: avoid; padding-top: 4px !important; padding-bottom: 3px !important; }
 
   /* 折扣區塊：列印縮小高度，隱藏 X 按鈕 */
   .discount-block { margin: 3px 0 !important; padding: 4px 14px !important; }
@@ -679,8 +680,8 @@ body {
   .cart-notes-print {
     display: block !important;
     flex-basis: 100% !important;
-    margin: 3px 0 4px 0 !important;
-    padding: 3px 0 3px 10px !important;
+    margin: 1px 0 2px 0 !important;
+    padding: 1px 0 1px 10px !important;
     background: transparent !important;
     border: none !important;
     border-left: 2px solid #CBD5E1 !important;
@@ -795,12 +796,14 @@ body {
     </div>
     <div class="panel-foot">
       <div class="sub-total-row"><span class="sub-label">自費小計</span><span class="sub-value" id="selfTotal">NT$ 0</span></div>
-      <div class="sub-total-row"><span class="sub-label">免自費項目</span><span class="sub-value" style="color:var(--ins-color)" id="insCount">0 項</span></div>
       <div class="sub-total-row">
-        <span class="sub-label">優惠折扣<button class="paid-toggle" id="paidToggle" title="已付金額">&#9654;</button></span>
-        <span class="sub-value" style="color:var(--gold)" id="discountTotal">— NT$ 0</span>
+        <span class="sub-label">優惠折扣</span>
+        <div class="cart-price-wrap">
+          <span class="discount-display" id="discountDisplay">— NT$ 0</span>
+          <span class="price-edit-hint" style="color:var(--gold);opacity:0.6">點擊修改金額</span>
+        </div>
       </div>
-      <div class="sub-total-row" id="paidRow" style="display:none">
+      <div class="sub-total-row">
         <span class="sub-label" style="color:var(--gold)">已付金額</span>
         <div class="cart-price-wrap">
           <span class="paid-display" id="paidDisplay">— NT$ 0</span>
@@ -1673,7 +1676,7 @@ function buildHome(){
     card.innerHTML=`
       <div class="cat-icon">${ICONS[cat.id]}</div>
       <div class="cat-label">${cat.label}</div>
-      <div class="cat-count-badge">${cat.items.filter(i=>!i.type).length} 項</div>
+      <div class="cat-count-badge">${cat.id==='endo'?(ENDO_TREE.layer1.length+ENDO_TREE.special.length):cat.items.filter(i=>!i.type).length} 項</div>
     `;
     card.addEventListener('click',()=>openCategory(cat.id));
     grid.appendChild(card);
@@ -2157,8 +2160,7 @@ function renderCart(){
     emptyState.style.display='';
     cartCount.textContent='0'; cartCount.classList.add('zero');
     document.getElementById('selfTotal').textContent='NT$ 0';
-    document.getElementById('insCount').textContent='0 項';
-    document.getElementById('discountTotal').textContent='— NT$ 0';
+    var dd=document.getElementById('discountDisplay');if(dd&&dd.tagName==='SPAN')dd.textContent='— NT$ 0';
     document.getElementById('grandTotal').textContent='0';
     return;
   }
@@ -2259,12 +2261,15 @@ function renderCart(){
     discountBlock.appendChild(block);
   }
 
-  const grand=Math.max(0,selfSum-totalDiscount-paidAmount);
+  // 優惠折扣（須先算好再用於 grand）
+  const displayDiscount = (manualDiscountOverride!==null) ? manualDiscountOverride : totalDiscount;
+  const grand=Math.max(0,selfSum-displayDiscount-paidAmount);
   const allTbd=selfSum===0&&selfItems.some(i=>i.price===0&&i.catLabel!=='內視鏡');
   document.getElementById('selfTotal').textContent=allTbd?'待建檔':`NT$ ${fmtPrice(selfSum)}`;
-  document.getElementById('insCount').textContent=`${insItems.length} 項`;
-  document.getElementById('discountTotal').textContent=totalDiscount>0?`— NT$ ${fmtPrice(totalDiscount)}`:'— NT$ 0';
+  var ddEl=document.getElementById('discountDisplay');
+  if(ddEl&&ddEl.tagName==='SPAN') ddEl.textContent=displayDiscount>0?`— NT$ ${fmtPrice(displayDiscount)}`:'— NT$ 0';
   document.getElementById('grandTotal').textContent=allTbd?'待建檔':fmtPrice(grand);
+  bindPaidDisplay(); bindDiscountDisplay();
   (function(){
     var hasEndo=cart.some(function(c){return c.catLabel==='內視鏡';});
     var hasHcDE=cart.some(function(c){return c.id==='hc4'||c.id==='hc5';});
@@ -2320,40 +2325,36 @@ window.addEventListener('resize', function(){
     positionSearchResults();
 });
 
-/* 已付金額 */
+/* 已付金額 & 優惠折扣（可手動編輯） */
 var paidAmount=0;
+var manualDiscountOverride=null; // null=自動計算, 數字=手動覆蓋
 
-function bindPaidDisplay(){
-  var el=document.getElementById('paidDisplay');
-  if(!el) return;
+function bindEditableAmount(elId, getter, setter, color){
+  var el=document.getElementById(elId);
+  if(!el||el.tagName!=='SPAN') return;
   el.addEventListener('click',function(){
     var input=document.createElement('input');
     input.type='number'; input.min='0'; input.className='price-edit-input';
-    input.style.color='var(--gold)'; input.value=paidAmount||'';
+    input.style.color=color||'var(--gold)'; input.value=getter()||'';
     el.replaceWith(input); input.focus(); input.select();
     function save(){
-      paidAmount=Math.max(0,parseInt(input.value)||0);
+      setter(Math.max(0,parseInt(input.value)||0));
       var span=document.createElement('span');
-      span.id='paidDisplay'; span.className='paid-display'+(paidAmount?'' : '');
-      span.textContent='— NT$ '+fmtPrice(paidAmount);
+      span.id=elId; span.className=el.className;
+      span.textContent='— NT$ '+fmtPrice(getter());
       input.replaceWith(span);
-      bindPaidDisplay(); renderCart();
+      bindEditableAmount(elId,getter,setter,color); renderCart();
     }
     input.addEventListener('blur',save);
     input.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key==='Escape')save();});
   });
 }
 
-document.getElementById('paidToggle').addEventListener('click',function(){
-  var row=document.getElementById('paidRow');
-  var tog=document.getElementById('paidToggle');
-  var isOpen=row.style.display!=='none';
-  row.style.display=isOpen?'none':'';
-  tog.classList.toggle('open',!isOpen);
-  if(isOpen){paidAmount=0;var d=document.getElementById('paidDisplay');if(d)d.textContent='— NT$ 0';renderCart();}
-});
+function bindPaidDisplay(){ bindEditableAmount('paidDisplay',()=>paidAmount,v=>{paidAmount=v;},'var(--gold)'); }
+function bindDiscountDisplay(){ bindEditableAmount('discountDisplay',()=>manualDiscountOverride||0,v=>{manualDiscountOverride=v;},'var(--gold)'); }
 
 bindPaidDisplay();
+bindDiscountDisplay();
 
 /* Init */
 buildHome(); renderCart();
