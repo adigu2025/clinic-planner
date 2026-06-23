@@ -343,7 +343,7 @@ body {
 .legend-item  { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); }
 .legend-dot   { width: 8px; height: 8px; border-radius: 50%; }
 
-.panel-body { flex: 1; overflow-y: auto; padding: 12px 14px; scroll-behavior: smooth; }
+.panel-body { flex: 1; overflow-y: auto; padding: 12px 14px 8px; scroll-behavior: smooth; }
 .panel-body::-webkit-scrollbar { width: 4px; }
 .panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
@@ -414,7 +414,7 @@ body {
 .discount-remove-btn:hover { opacity: 1; background: rgba(217,119,6,0.12); }
 
 /* Panel Footer */
-.panel-foot { padding: 14px 20px 18px; border-top: 1px solid var(--border); flex-shrink: 0; }
+.panel-foot { padding: 9px 20px 18px; border-top: 1px solid var(--border); flex-shrink: 0; }
 .sub-total-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
 .sub-label { font-size: 14px; color: var(--muted); }
 .sub-value { font-size: 14px; font-weight: 600; color: var(--text); }
@@ -949,10 +949,10 @@ FSH, LH, E2, TSH, prostaglandin, progesterone, chlamydia IgG`,
 anti-HIV, N-gono DNA, RPR/VDRL, HSVI-IgG, HSVII-IgG, treponemal, trachomatis DNA`,
   lb14:`(MAK)
 alb, Zn, ferritin, cortisol, vit D3, homocysteine, TSH, fT4`,
-  lb15:`女性7項癌篩`,
-  lb16:`女性11項癌篩`,
-  lb17:`男性6項癌篩`,
-  lb18:`男性11項癌篩`,
+  lb15:`CEA、AFP、CA125、CA153、CA199、SCC、Cyfra 21-1`,
+  lb16:`CEA、AFP、CA125、CA153、CA199、SCC、Cyfra 21-1、CA-724、Pro-GRP、β-HCG、EV-VCA-IgA`,
+  lb17:`CEA、AFP、CA199、PSA、SCC、Cyfra 21-1`,
+  lb18:`CEA、AFP、CA199、PSA、SCC、Cyfra 21-1、CA-724、Pro-GRP、β-HCG、free-PSA、EV-VCA-IgA`,
   // ex1-ex5: 檢查項目無備註
   dr1:`重建 × 再生 × 賦活\n縮短修復期，啟動癒合力`,
   dr2:`肝臟修復 × 告別暗沉\n洗去昨日的疲憊，迎接透亮的晨曦`,
@@ -999,10 +999,10 @@ const CATEGORIES = [
       { id:'lb12', name:'女性荷爾蒙', desc:'(MAG)', price:1500 },
       { id:'lb13', name:'婚前健檢', desc:'(KKJ)', price:3800 },
       { id:'lb14', name:'傷口癒合力指標', desc:'(MAK)', price:1500 },
-      { id:'lb15', name:'基礎腫瘤指標(女)', desc:'女性7項癌篩', price:2500 },
-      { id:'lb16', name:'完整腫瘤指標(女)', desc:'女性11項癌篩', price:4000 },
-      { id:'lb17', name:'基礎腫瘤指標(男)', desc:'男性6項癌篩', price:2200 },
-      { id:'lb18', name:'完整腫瘤指標(男)', desc:'男性11項癌篩', price:4000 },
+      { id:'lb15', name:'基礎腫瘤指標(女)', desc:'(CAF)女性7項癌篩', price:2500 },
+      { id:'lb16', name:'完整腫瘤指標(女)', desc:'(H-62)女性11項癌篩', price:4000 },
+      { id:'lb17', name:'基礎腫瘤指標(男)', desc:'(CAM)男性6項癌篩', price:2200 },
+      { id:'lb18', name:'完整腫瘤指標(男)', desc:'(H-52)男性11項癌篩', price:4000 },
       { id:'lb_s0', type:'section', name:'一般生化檢查' },
       { id:'lb_01001', name:'AC Sugar 飯前血糖', price:70 },
       { id:'lb_01002', name:'PC Sugar 飯後血糖', price:70 },
@@ -1399,10 +1399,10 @@ const DISCOUNT_RULES = [
     check:c=>c.filter(i=>i.id.startsWith('dr')).length>=2 },
   { id:'disc-drip-3', name:'三選點滴療程優惠', note:'任選三項（含）以上點滴', discount:0,
     check:c=>c.filter(i=>i.id.startsWith('dr')).length>=3 },
-  // 超音波複選優惠 (取最優一組，不疊加)
-  { id:'disc-us-2', name:'雙項超音波優惠', note:'複選任意2項超音波折價200', discount:200,
+  // 超音波複選優惠 (取最優一組，不疊加)；僅計算自費（mode!=='ins'）項目
+  { id:'disc-us-2', name:'雙項超音波優惠', note:'選任意2項自費超音波折價200', discount:200,
     check:c=>c.filter(i=>['ex1','ex2','ex3'].includes(i.id)&&i.mode!=='ins').length>=2 },
-  { id:'disc-us-3', name:'三項超音波優惠', note:'複選三項超音波折價400', discount:400,
+  { id:'disc-us-3', name:'三項超音波優惠', note:'選滿3項自費超音波折價400', discount:400,
     check:c=>c.filter(i=>['ex1','ex2','ex3'].includes(i.id)&&i.mode!=='ins').length===3 },
 ];
 
@@ -1411,6 +1411,7 @@ const DISCOUNT_RULES = [
    ═══════════════════════════════════════════════════════════════════ */
 let cart = [];
 let currentCat = null;
+let dismissedDiscounts = new Set();
 let kbIndex = -1;
 let endoDepth=0, endoL1=null, endoL2=null;
 
@@ -1564,6 +1565,7 @@ function runSearch(q){
   const hits = [];
   CATEGORIES.forEach(cat=>{
     cat.items.forEach(item=>{
+      if(item.type==='section') return;
       const haystack = (item.name+' '+item.desc+' '+(ITEM_NOTES[item.id]||'')).toLowerCase();
       if(haystack.includes(ql)){
         hits.push({ catId:cat.id, catLabel:cat.label, item });
@@ -2105,6 +2107,11 @@ function toggleItem(item, clickMode){
       showToast(`切換為${cart[idx].mode==='ins'?'免自費':'自費'}：${item.name}`);
     }
   }
+  // 超音波項目異動時清除dismissed，讓條件重新自動判斷
+  if(['ex1','ex2','ex3'].includes(item.id)){
+    dismissedDiscounts.delete('disc-us-2');
+    dismissedDiscounts.delete('disc-us-3');
+  }
   renderCart();
   if(currentCat) buildItemsGrid(currentCat);
 }
@@ -2229,7 +2236,7 @@ function renderCart(){
   const selfSum=selfItems.reduce((s,i)=>s+(i.price||0),0);
 
   // Discounts
-  const activeAll=DISCOUNT_RULES.filter(r=>r.check(cart)&&r.discount>0);
+  const activeAll=DISCOUNT_RULES.filter(r=>r.check(cart)&&r.discount>0&&!dismissedDiscounts.has(r.id));
   const dripBest=activeAll.filter(d=>d.id.startsWith('disc-drip')).sort((a,b)=>b.discount-a.discount)[0];
   const usBest  =activeAll.filter(d=>d.id.startsWith('disc-us')).sort((a,b)=>b.discount-a.discount)[0];
   const finalDiscs=[
@@ -2245,7 +2252,8 @@ function renderCart(){
       totalDiscount+=d.discount;
       const r=document.createElement('div'); r.className='discount-row';
       r.innerHTML=`<span class="discount-name">${esc(d.name)}</span>
-                   <span class="discount-amt">— NT$ ${fmtPrice(d.discount)}</span>`;
+                   <span class="discount-amt">— NT$ ${fmtPrice(d.discount)}</span>
+                   <button class="discount-remove-btn" data-disc-id="${esc(d.id)}" title="取消此優惠">✕</button>`;
       block.appendChild(r);
     });
     discountBlock.appendChild(block);
@@ -2268,8 +2276,21 @@ function renderCart(){
 function removeItem(id){
   const item=cart.find(c=>c.id===id); cart=cart.filter(c=>c.id!==id);
   if(item) showToast(`已移除：${item.name}`);
+  // 重新計算：若超音波優惠條件已不滿足則自動清除dismissed狀態
+  ['disc-us-2','disc-us-3'].forEach(id=>{
+    const rule=DISCOUNT_RULES.find(r=>r.id===id);
+    if(rule&&!rule.check(cart)) dismissedDiscounts.delete(id);
+  });
   renderCart(); if(currentCat) buildItemsGrid(currentCat);
 }
+
+/* 手動取消優惠 X 按鈕 */
+document.getElementById('discountBlock').addEventListener('click', function(e){
+  const btn = e.target.closest('.discount-remove-btn');
+  if(!btn) return;
+  dismissedDiscounts.add(btn.dataset.discId);
+  renderCart();
+});
 
 document.getElementById('btnClear').addEventListener('click',()=>{
   if(!cart.length) return; cart=[]; renderCart(); if(currentCat) buildItemsGrid(currentCat);
