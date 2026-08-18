@@ -2454,8 +2454,9 @@ function renderSpItem(grid,sp,l2arr,l3arr){
       var l2inCart=!!cart.find(function(x){return x.id===l2fid;});
       var l2c=document.createElement('div'); l2c.className='item-card'+(l2inCart?' selected':'');
       l2c.dataset.id=l2fid;  /* 啟用 hover 備註 */
+      /* 斷行位置比照常規內視鏡（第 4 字），避免「日本製造代/餐與清腸藥物」這種斷法 */
       l2c.innerHTML='<div class="mode-badge self">自費</div>'
-        +'<div class="item-name">'+(l2.name.length>5?esc(l2.name.slice(0,5))+'<br>'+esc(l2.name.slice(5)):esc(l2.name))+'</div>'
+        +'<div class="item-name">'+(l2.name.length>4?esc(l2.name.slice(0,4))+'<br>'+esc(l2.name.slice(4)):esc(l2.name))+'</div>'
         +'<div class="endo-add-price">+ NT '+fmtPrice(l2.addPrice)+'</div>'
         +'<div class="check-dot">✓</div>';
       (function(item,l2o){l2c.onclick=function(){toggleSpL2(item,l2o);};})(sp,l2);
@@ -2498,10 +2499,11 @@ function clearSpGroup(l1id){
   });
 }
 
+/* 用詞比照常規內視鏡（en_gastro.layer2 / en_colon.layer2），全站描述一致 */
 var SP_GASTRO_SCOPE=[
-  {id:'sp_sc_s', name:'標準胃鏡 (0.9cm) 經口', desc:'使用拋棄式咬口器', addPrice:100},
-  {id:'sp_sc_to',name:'極細胃鏡 (0.5cm) 經口', desc:'使用拋棄式咬口器', addPrice:700},
-  {id:'sp_sc_tn',name:'極細胃鏡 (0.5cm) 經鼻', desc:'無其他耗材',       addPrice:600},
+  {id:'sp_sc_s', name:'標準胃鏡 (直徑約0.9cm) 經口', desc:'使用拋棄式咬口器', addPrice:100},
+  {id:'sp_sc_to',name:'極細胃鏡 (直徑約0.5cm) 經口', desc:'使用拋棄式咬口器', addPrice:700},
+  {id:'sp_sc_tn',name:'極細胃鏡 (直徑約0.5cm) 經鼻', desc:'無其他耗材',       addPrice:600},
 ];
 var SP_GASTRO_SED=[
   {id:'sp_g_w',name:'清醒',       addPrice:0},
@@ -2509,8 +2511,8 @@ var SP_GASTRO_SED=[
   {id:'sp_g_a',name:'麻醉',       addPrice:4000},
 ];
 var SP_COLON_PREP=[
-  {id:'sp_cp_j',name:'日本製造代餐與清腸藥物',desc:'拋棄式檢查褲＋大腸鏡二氧化碳充氣',addPrice:1500},
-  {id:'sp_cp_t',name:'台灣製造代餐與清腸藥物',desc:'拋棄式檢查褲＋大腸鏡二氧化碳充氣',addPrice:1200},
+  {id:'sp_cp_j',name:'日本製造代餐與清腸藥物',desc:'拋棄式檢查褲 ＋ 大腸鏡二氧化碳充氣',addPrice:1500},
+  {id:'sp_cp_t',name:'台灣製造代餐與清腸藥物',desc:'拋棄式檢查褲 ＋ 大腸鏡二氧化碳充氣',addPrice:1200},
 ];
 var SP_COLON_SED=[
   {id:'sp_c_w',name:'清醒',       addPrice:0},
