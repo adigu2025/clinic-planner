@@ -30,35 +30,51 @@
   font-size: 12px; font-family: inherit; background: none;
   border: 1.5px solid var(--border); color: var(--muted); transition: all 0.15s;
 }
-.custom-add-cancel-btn:hover { border-color: #EF4444; color: #EF4444; }
+.custom-add-cancel-btn:hover { border-color: var(--danger); color: var(--danger); }
 
 /* ─── Reset & Variables ─────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --primary:      #1B3550;
-  --primary-dark: #122540;
-  --accent:       #2B8A9A;
-  --accent-light: #3AAABB;
-  --accent-pale:  #EBF7FA;
-  --ins-color:    #0EA472;
-  --ins-pale:     #ECFDF5;
-  --gold:         #D97706;
-  --gold-pale:    #FFFBEB;
-  --bg:           #F4F6F9;
+  /* 品牌色（依診所品牌規範）：Teal #3E6A7C ／ Gold #BC7F30 ／ Navy #152831 */
+  --primary:      #152831;
+  --primary-dark: #0C1A21;
+  --primary-mid:  #23414F;
+  --accent:       #3E6A7C;
+  --accent-light: #54889D;
+  --accent-pale:  #EDF4F7;
+  --accent-rgb:   62,106,124;
+  --ins-color:    #14805C;
+  --ins-pale:     #EDF8F3;
+  --ins-rgb:      20,128,92;
+  --gold:         #BC7F30;
+  --gold-pale:    #FDF6EA;
+  --gold-line:    #E4C793;
+  --gold-deep:    #7A4F14;
+  --gold-rgb:     188,127,48;
+  --danger:       #C0453C;
+  --danger-pale:  #FCF2F1;
+  --bg:           #F3F6F8;
   --surface:      #FFFFFF;
-  --text:         #1B2B38;
-  --muted:        #64748B;
-  --border:       #E2E8F0;
-  --shadow-sm:    0 1px 4px rgba(0,0,0,0.07);
-  --shadow-md:    0 4px 18px rgba(0,0,0,0.09);
-  --shadow-lg:    0 10px 36px rgba(0,0,0,0.12);
+  --text:         #152831;
+  --muted:        #64757F;
+  --border:       #DFE6EA;
+  --border-strong:#C6D3DA;
+  --shadow-sm:    0 1px 3px rgba(21,40,49,0.06);
+  --shadow-md:    0 4px 16px rgba(21,40,49,0.10);
+  --shadow-lg:    0 12px 36px rgba(21,40,49,0.14);
+  --focus-ring:   0 0 0 3px rgba(62,106,124,0.32);
   --radius:       16px;
   --radius-sm:    10px;
   --ease:         cubic-bezier(0.25,0.46,0.45,0.94);
+  --panel-w:      370px;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
                "PingFang TC", "Noto Sans TC", "Microsoft JhengHei",
                "Helvetica Neue", sans-serif;
 }
+
+/* 一致的鍵盤焦點樣式 */
+:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 8px; }
+.item-card:focus-visible, .cat-card:focus-visible { box-shadow: var(--focus-ring), var(--shadow-md); }
 body {
   background: var(--bg); color: var(--text);
   height: 100vh; overflow: hidden;
@@ -69,15 +85,22 @@ body {
 /* ─── Banner ─────────────────────────────────────────────────────── */
 .banner {
   flex-shrink: 0; height: calc(68px + 10pt);
-  background: linear-gradient(130deg, var(--primary-dark) 0%, var(--primary) 55%, #1E4D68 100%);
-  display: flex; align-items: center; justify-content: center; padding: 0 calc(370px + 32px) 0 32px;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.22);
+  background: linear-gradient(130deg, var(--primary-dark) 0%, var(--primary) 52%, var(--primary-mid) 100%);
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 calc(var(--panel-w) + 32px) 0 32px;
+  box-shadow: 0 2px 14px rgba(21,40,49,0.24);
   position: relative; z-index: 10;
+}
+/* 細金線收邊：呼應品牌強調色 */
+.banner::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--gold) 55%, var(--accent) 100%);
+  opacity: 0.75;
 }
 .banner-text { text-align: center; margin-top: 10pt; }
 .banner-name { font-size: 22px; font-weight: 700; color: #FFF; letter-spacing: 0.12em; }
-.banner-sub  { font-size: 12px; color: rgba(255,255,255,0.65); letter-spacing: 0.1em; margin-top: 2px; }
-.banner-date { position: absolute; right: 32px; color: rgba(255,255,255,0.42); font-size: 12px; letter-spacing: 0.05em; text-align: right; line-height: 1.6; }
+.banner-sub  { font-size: 12px; color: rgba(255,255,255,0.68); letter-spacing: 0.1em; margin-top: 2px; }
+.banner-date { position: absolute; right: 32px; color: rgba(255,255,255,0.5); font-size: 12px; letter-spacing: 0.05em; text-align: right; line-height: 1.6; }
 
 /* ─── Layout ─────────────────────────────────────────────────────── */
 .layout  { flex: 1; display: flex; overflow: hidden; }
@@ -95,35 +118,40 @@ body {
 .screen.exit   { opacity: 0; transform: translateX(-18px); }
 
 /* ─── Home Screen ────────────────────────────────────────────────── */
-#screen-home { overflow: visible; }
-#home-inner  { position: relative; width: 100%; height: 100%; }
-
-/* Hero — 上 1/4 */
-.home-hero {
-  position: absolute; top: 15%; left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%; max-width: 780px;
-  text-align: center; padding: 0 32px;
+/* 改為流排版：任何視窗高度都不會互相重疊，過矮時可捲動 */
+#screen-home { overflow-y: auto; overflow-x: hidden; }
+#screen-home::-webkit-scrollbar { width: 6px; }
+#screen-home::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+#home-inner {
+  min-height: 100%; width: 100%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: clamp(18px, 3.6vh, 40px);
+  padding: clamp(24px, 5vh, 60px) 32px clamp(28px, 5vh, 56px);
 }
+
+.home-hero { width: 100%; max-width: 780px; text-align: center; }
 .home-hero-eyebrow {
   font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase;
   color: var(--accent); margin-bottom: 12px; font-weight: 500;
 }
-.home-hero-title { /* ★ 保持原尺寸 */
-  font-size: 44px; font-weight: 300; color: var(--text);
+.home-hero-title {
+  font-size: clamp(30px, 3.4vw, 44px); font-weight: 300; color: var(--text);
   letter-spacing: 0.05em; line-height: 1.15;
 }
 .home-hero-title strong { font-weight: 700; color: var(--primary); display: block; }
 
 /* Search bar */
-.search-wrap {
-  position: absolute; top: 33%; left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%; max-width: 560px; padding: 0 32px;
-  z-index: 9999;
+.search-wrap { width: 100%; max-width: 560px; }
+.search-box  { position: relative; }
+.field-label {
+  display: block; font-size: 12.5px; color: var(--muted);
+  letter-spacing: 0.06em; margin: 0 0 7px 20px;
 }
-.search-box {
-  position: relative;
+.field-label kbd {
+  font-family: inherit; font-size: 11px; background: var(--surface);
+  border: 1px solid var(--border); border-bottom-width: 2px;
+  border-radius: 5px; padding: 1px 5px; margin-left: 6px; color: var(--muted);
 }
 .search-input {
   width: 100%; height: 48px;
@@ -137,7 +165,7 @@ body {
   outline: none;
   transition: border-color 0.18s, box-shadow 0.18s;
 }
-.search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(43,138,154,0.15), var(--shadow-md); }
+.search-input:focus { border-color: var(--accent); box-shadow: var(--focus-ring), var(--shadow-md); }
 .search-icon {
   position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
   color: var(--muted); pointer-events: none; font-size: 18px;
@@ -153,17 +181,16 @@ body {
 .search-clear.visible { display: block; }
 .search-icon.hidden  { display: none; }
 
-/* Search results dropdown */
+/* Search results dropdown — fixed 定位，不受捲動容器裁切 */
 .search-results {
-  position: absolute;
-  top: calc(100% + 4px); left: 0; right: 0;
-  background: rgba(255,255,255,0.7);
+  position: fixed;
+  background: rgba(255,255,255,0.94);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1.5px solid rgba(226,232,240,0.8);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.13);
-  max-height: 220px; overflow-y: auto;
+  border: 1.5px solid var(--border);
+  border-radius: 12px; overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  max-height: 320px; overflow-y: auto;
   z-index: 9999;
   display: none;
 }
@@ -195,19 +222,15 @@ body {
   font-size: 14px; color: var(--muted);
 }
 
-/* Cat grid — 正中央 */
-.cat-grid-wrap {
-  position: absolute; top: 60%; left: 50%;
-  transform: translate(-50%, -50%);
-  width: calc(100% - 80px); max-width: 880px;
-}
+/* Cat grid */
+.cat-grid-wrap { width: 100%; max-width: 900px; }
 .cat-grid {
-  display: grid; grid-template-columns: repeat(5,1fr); gap: 18px; width: 100%;
-  padding-top: 8px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: clamp(10px, 1.4vw, 18px); width: 100%;
 }
 .cat-card {
   background: var(--surface); border-radius: var(--radius);
-  padding: 26px 12px 22px;
+  padding: clamp(18px, 2.4vh, 26px) 12px clamp(16px, 2vh, 22px);
   display: flex; flex-direction: column; align-items: center; gap: 12px;
   cursor: pointer; border: 1.5px solid var(--border); box-shadow: var(--shadow-sm);
   transition: transform 0.22s var(--ease), box-shadow 0.22s var(--ease), border-color 0.22s var(--ease);
@@ -216,14 +239,14 @@ body {
 .cat-card:hover  { transform: translateY(-5px); box-shadow: var(--shadow-lg); border-color: var(--accent); }
 .cat-card:active { transform: translateY(-2px); }
 .cat-icon {
-  width: 64px; height: 64px; border-radius: 18px;
-  background: #EEF3F7; border: 1.5px solid #D8E4EC;
+  width: 64px; height: 64px; border-radius: 18px; color: var(--primary);
+  background: var(--accent-pale); border: 1.5px solid #D5E3E9;
   display: flex; align-items: center; justify-content: center;
-  transition: transform 0.22s var(--ease), background 0.22s var(--ease);
+  transition: transform 0.22s var(--ease), background 0.22s var(--ease), color 0.22s var(--ease);
 }
 .cat-icon svg { width: 36px; height: 36px; }
-.cat-card:hover .cat-icon { transform: scale(1.07); background: #E3EDF5; }
-.cat-label       { font-size: 20px; font-weight: 600; color: var(--text); letter-spacing: 0.04em; }
+.cat-card:hover .cat-icon { transform: scale(1.07); background: #E1EDF2; color: var(--accent); }
+.cat-label       { font-size: clamp(16px, 1.5vw, 20px); font-weight: 600; color: var(--text); letter-spacing: 0.04em; }
 .cat-count-badge { font-size: 13px; color: var(--muted); background: var(--bg); padding: 2px 10px; border-radius: 12px; border: 1px solid var(--border); }
 
 /* ─── Category Screen ────────────────────────────────────────────── */
@@ -239,7 +262,7 @@ body {
 .back-btn:hover { background: var(--accent-pale); border-color: var(--accent); color: var(--accent); }
 .back-arrow { font-size: 16px; }
 .screen-heading { display: flex; align-items: center; gap: 10px; }
-.screen-cat-icon { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.screen-cat-icon { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--accent); }
 .screen-cat-icon svg { width: 32px; height: 32px; }
 .screen-title { font-size: 24px; font-weight: 600; color: var(--text); letter-spacing: 0.04em; } /* ★ 保持 */
 .screen-desc  { font-size: 15px; color: var(--muted); margin-top: 2px; }
@@ -253,7 +276,7 @@ body {
 .items-section-header {
   grid-column: 1 / -1; padding: 14px 8px 6px; margin-top: 10px;
   font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--primary); border-bottom: 2px solid rgba(43,138,154,0.3);
+  color: var(--primary); border-bottom: 2px solid rgba(var(--accent-rgb),0.3);
 }
 .items-section-header:first-child { margin-top: 0; }
 .items-section-header.combo-section { color: var(--accent); }
@@ -272,14 +295,14 @@ body {
 .sp-nm { min-height: 2.8em; display: block; }
 /* 自費內視鏡子選單卡片：高度與 L1 卡片一致 */
 .sp-sub-row .item-card { min-height: 140px; }
-.item-card:hover:not(.selected):not(.ins-mode) { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: #94C6CF; }
+.item-card:hover:not(.selected):not(.ins-mode) { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--border-strong); }
 .item-card.selected  { border-color: var(--accent); background: var(--accent-pale); box-shadow: 0 0 0 1px var(--accent), var(--shadow-md); transform: translateY(-1px); }
 .item-card.ins-mode  { border-color: var(--ins-color); background: var(--ins-pale); box-shadow: 0 0 0 1px var(--ins-color), var(--shadow-md); transform: translateY(-1px); }
 
 /* Search highlight flash */
 @keyframes highlightFlash {
   0%,100% { box-shadow: 0 0 0 3px var(--accent), var(--shadow-lg); }
-  50%     { box-shadow: 0 0 0 7px rgba(43,138,154,0.25), var(--shadow-lg); transform: scale(1.02); }
+  50%     { box-shadow: 0 0 0 7px rgba(var(--accent-rgb),0.25), var(--shadow-lg); transform: scale(1.02); }
 }
 .highlight-flash { animation: highlightFlash 0.55s ease 3 !important; border-color: var(--accent) !important; }
 
@@ -287,8 +310,8 @@ body {
   position: absolute; top: 10px; right: 10px;
   font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 10px; letter-spacing: 0.04em;
 }
-.mode-badge.self { background: rgba(43,138,154,0.12); color: var(--accent); }
-.mode-badge.ins  { background: rgba(14,164,114,0.12); color: var(--ins-color); }
+.mode-badge.self { background: rgba(var(--accent-rgb),0.12); color: var(--accent); }
+.mode-badge.ins  { background: rgba(var(--ins-rgb),0.12); color: var(--ins-color); }
 
 .item-name { font-size: 16px; font-weight: 600; color: var(--text); line-height: 1.4; padding-right: 46px; margin-bottom: 5px; word-break: keep-all; overflow-wrap: break-word; }
 .item-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 12px; word-break: keep-all; overflow-wrap: break-word; }
@@ -315,7 +338,7 @@ body {
 /* ─── Tooltip ────────────────────────────────────────────────────── */
 .tooltip-popup {
   position: fixed; z-index: 9999;
-  background: #1B2B38; color: #EFF6FF;
+  background: var(--primary); color: #EDF3F6;
   padding: 12px 16px; border-radius: 12px;
   font-size: 13px; line-height: 1.7;
   max-width: 290px; max-height: 320px; overflow-y: auto;
@@ -332,16 +355,18 @@ body {
 
 /* ─── Pricing Panel ──────────────────────────────────────────────── */
 .pricing-panel {
-  width: 370px; flex-shrink: 0;
+  width: var(--panel-w); flex-shrink: 0;
   background: var(--surface); border-left: 1px solid var(--border);
   display: flex; flex-direction: column;
-  box-shadow: -4px 0 24px rgba(0,0,0,0.05);
+  box-shadow: -4px 0 24px rgba(21,40,49,0.05);
 }
 .panel-head {
   border-bottom: 1px solid var(--border);
   flex-shrink: 0; display: flex; flex-direction: column;
 }
 .panel-head-title { font-size: 17px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 7px; }
+.panel-head-title .head-icon { color: var(--accent); display: inline-flex; }
+.panel-head-title .head-icon svg { width: 17px; height: 17px; display: block; }
 .cart-count { background: var(--accent); color: white; font-size: 13px; font-weight: 700; padding: 1px 8px; border-radius: 12px; min-width: 24px; text-align: center; transition: background 0.2s; }
 .cart-count.zero { background: var(--border); color: var(--muted); }
 .panel-legend { margin-left: auto; display: flex; align-items: center; gap: 10px; }
@@ -354,7 +379,8 @@ body {
 
 .empty-state { text-align: center; padding: 52px 20px; opacity: 0; animation: fadeIn 0.4s var(--ease) 0.1s forwards; }
 @keyframes fadeIn { to { opacity: 1; } }
-.empty-icon { font-size: 36px; margin-bottom: 12px; filter: grayscale(0.4); opacity: 0.5; }
+.empty-icon { margin-bottom: 14px; color: var(--border-strong); display: flex; justify-content: center; }
+.empty-icon svg { width: 40px; height: 40px; }
 .empty-text { font-size: 15px; color: var(--muted); line-height: 1.7; }
 
 .cart-item {
@@ -362,14 +388,17 @@ body {
   border-radius: var(--radius-sm); padding: 11px 12px; margin-bottom: 7px;
   display: flex; align-items: flex-start; gap: 8px;
   animation: slideUp 0.2s var(--ease);
+  transition: box-shadow 0.3s var(--ease), border-color 0.3s var(--ease);
 }
+/* 剛加入的項目短暫標示，避免長清單中看不到新增了什麼 */
+.cart-item.just-added { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(var(--accent-rgb),0.22); }
 @keyframes slideUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
 .cart-item-body { flex: 1; min-width: 0; }
 .cart-item-name { font-size: 15px; font-weight: 600; color: var(--text); white-space: normal; word-break: break-word; margin-bottom: 3px; }
 .cart-item-meta { display: flex; align-items: center; gap: 5px; }
 .cart-badge { font-size: 11.5px; font-weight: 700; padding: 1px 7px; border-radius: 8px; letter-spacing: 0.04em; }
-.cart-badge.self { background: rgba(43,138,154,0.1); color: var(--accent); }
-.cart-badge.ins  { background: rgba(14,164,114,0.1); color: var(--ins-color); }
+.cart-badge.self { background: rgba(var(--accent-rgb),0.1); color: var(--accent); }
+.cart-badge.ins  { background: rgba(var(--ins-rgb),0.1); color: var(--ins-color); }
 .cart-item-cat   { font-size: 12px; color: var(--muted); }
 
 /* Editable price */
@@ -382,7 +411,7 @@ body {
   white-space: nowrap; cursor: pointer; border-radius: 6px;
   padding: 2px 6px; transition: background 0.15s;
 }
-.cart-item-price:hover:not(.ins-p):not(.tbd) { background: rgba(43,138,154,0.1); }
+.cart-item-price:hover:not(.ins-p):not(.tbd) { background: rgba(var(--accent-rgb),0.1); }
 .cart-item-price.ins-p { color: var(--ins-color); cursor: default; }
 .cart-item-price.tbd   { color: var(--muted); font-size: 13px; font-weight: 500; cursor: pointer; }
 .cart-item-price.edited { color: var(--gold); }
@@ -400,23 +429,23 @@ body {
   padding: 4px 5px; border-radius: 6px; font-size: 16px; line-height: 1;
   transition: color 0.15s, background 0.15s; flex-shrink: 0; align-self: flex-start;
 }
-.cart-remove-btn:hover { color: #EF4444; background: #FEF2F2; }
+.cart-remove-btn:hover { color: var(--danger); background: var(--danger-pale); }
 
 .cart-group-label { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 8px 4px 4px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
 
-.discount-block { margin: 8px 0; padding: 8px 14px; background: var(--gold-pale); border: 1px solid #F6D860; border-radius: var(--radius-sm); animation: slideUp 0.2s var(--ease); }
-.discount-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 5px 0; border-top: 1px solid rgba(246,216,96,0.4); }
+.discount-block { margin: 8px 0; padding: 8px 14px; background: var(--gold-pale); border: 1px solid var(--gold-line); border-radius: var(--radius-sm); animation: slideUp 0.2s var(--ease); }
+.discount-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 5px 0; border-top: 1px solid rgba(var(--gold-rgb),0.22); }
 .discount-row:first-child { border-top: none; }
-.discount-name { font-size: 14px; color: #92400E; flex: 1; line-height: 1.4; }
+.discount-name { font-size: 14px; color: var(--gold-deep); flex: 1; line-height: 1.4; }
 .discount-amt  { font-size: 15px; font-weight: 700; color: var(--gold); white-space: nowrap; cursor: pointer; border-radius: 4px; padding: 1px 5px; transition: background 0.15s; }
-.discount-amt:hover { background: rgba(217,119,6,0.1); }
+.discount-amt:hover { background: rgba(var(--gold-rgb),0.12); }
 .discount-remove-btn {
   background: none; border: none; cursor: pointer;
-  color: #92400E; opacity: 0.45; font-size: 15px; line-height: 1;
+  color: var(--gold-deep); opacity: 0.45; font-size: 15px; line-height: 1;
   padding: 2px 4px; border-radius: 4px; margin-left: 4px; flex-shrink: 0;
   transition: opacity 0.15s, background 0.15s;
 }
-.discount-remove-btn:hover { opacity: 1; background: rgba(217,119,6,0.12); }
+.discount-remove-btn:hover { opacity: 1; background: rgba(var(--gold-rgb),0.14); }
 
 /* Panel Footer */
 .panel-foot { padding: 14px 20px 18px; border-top: 1px solid var(--border); flex-shrink: 0; }
@@ -429,7 +458,7 @@ body {
 .grand-value-wrap { display: flex; align-items: baseline; gap: 3px; }
 .grand-currency { font-size: 15px; color: var(--muted); font-weight: 500; }
 .grand-value { font-size: 32px; font-weight: 700; color: var(--primary); letter-spacing: -0.03em; line-height: 1; transition: color 0.2s, background 0.15s; cursor: pointer; border-radius: 6px; padding: 2px 6px; }
-#grandTotal:hover { background: rgba(27,53,80,0.08); }
+#grandTotal:hover { background: rgba(var(--accent-rgb),0.10); }
 .action-row { display: flex; gap: 8px; margin-top: 14px; }
 
 /* ─── 已付金額 ──────────────────────────────────────────────────── */
@@ -438,28 +467,60 @@ body {
   cursor: pointer; border-radius: 4px; padding: 1px 5px;
   transition: background 0.15s;
 }
-.paid-display:hover, .discount-display:hover { background: rgba(217,119,6,0.08); }
+.paid-display:hover, .discount-display:hover { background: rgba(var(--gold-rgb),0.10); }
 .paid-display.edited { opacity: 0.85; }
 .btn-clear, .btn-print {
   flex: 1; padding: 10px; border-radius: 20px; cursor: pointer;
   font-size: 14px; font-family: inherit; letter-spacing: 0.02em; transition: all 0.18s var(--ease);
 }
 .btn-clear { background: none; border: 1.5px solid var(--border); color: var(--muted); }
-.btn-clear:hover { border-color: #EF4444; color: #EF4444; background: #FEF2F2; }
+.btn-clear:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-pale); }
 .btn-print { background: var(--primary); border: none; color: white; }
 .btn-print:hover { background: var(--accent); }
 
-/* Toast */
+/* Toast（可附「復原」動作） */
 .toast {
   position: fixed; bottom: 22px; left: 50%;
   transform: translateX(-50%) translateY(12px);
   background: var(--primary); color: white;
-  padding: 9px 22px; border-radius: 22px;
+  padding: 9px 14px 9px 22px; border-radius: 22px;
   font-size: 15px; box-shadow: var(--shadow-lg);
   opacity: 0; transition: opacity 0.25s, transform 0.25s var(--ease);
   pointer-events: none; z-index: 999; white-space: nowrap; letter-spacing: 0.02em;
+  display: flex; align-items: center; gap: 12px;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.has-action { pointer-events: auto; }
+.toast-msg { flex: 1; }
+.toast-action {
+  background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.28);
+  color: #FFF; font-family: inherit; font-size: 13.5px; font-weight: 600;
+  padding: 4px 14px; border-radius: 14px; cursor: pointer;
+  transition: background 0.15s; flex-shrink: 0;
+}
+.toast-action:hover { background: rgba(255,255,255,0.26); }
+.toast-action.hidden { display: none; }
+
+/* ─── 還原上次清單提示列 ────────────────────────────────────────── */
+.restore-bar {
+  display: none; align-items: center; gap: 10px;
+  margin: 0 0 8px; padding: 9px 12px;
+  background: var(--gold-pale); border: 1px solid var(--gold-line);
+  border-radius: var(--radius-sm); animation: slideUp 0.25s var(--ease);
+}
+.restore-bar.show { display: flex; }
+.restore-text { flex: 1; font-size: 12.5px; color: var(--gold-deep); line-height: 1.5; }
+.restore-btn {
+  font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  padding: 4px 12px; border-radius: 12px; flex-shrink: 0;
+  background: var(--gold); border: none; color: #FFF; transition: opacity 0.15s;
+}
+.restore-btn:hover { opacity: 0.86; }
+.restore-dismiss {
+  background: none; border: none; cursor: pointer; color: var(--gold-deep);
+  opacity: 0.5; font-size: 15px; line-height: 1; padding: 2px 4px; flex-shrink: 0;
+}
+.restore-dismiss:hover { opacity: 1; }
 
 /* ─── Patient Name Input ────────────────────────────────────────── */
 .patient-name-row {
@@ -468,15 +529,15 @@ body {
   border-bottom: 1px solid var(--border);
   margin-bottom: 6px;
 }
+.patient-name-label { font-size: 14px; color: var(--muted); white-space: nowrap; }
 .patient-name-input {
-  flex: 1; height: 34px; padding: 0 14px;
+  flex: 1; min-width: 0; height: 34px; padding: 0 14px;
   border: 1.5px solid var(--border); border-radius: 20px;
   font-family: inherit; font-size: 14px; color: var(--text);
   background: var(--bg); outline: none;
   transition: border-color 0.18s, background 0.18s;
 }
 .patient-name-input:focus { border-color: var(--accent); background: var(--surface); }
-.patient-name-input::placeholder { color: var(--muted); font-size: 13px; }
 .patient-greeting-label { font-size: 15px; color: var(--muted); white-space: nowrap; }
 .panel-head-inner { display: flex; align-items: center; padding: 8px 22px 14px; gap: 8px; }
 .panel-head-inner .panel-head-title { flex: 1; }
@@ -489,7 +550,7 @@ body {
 .endo-breadcrumb-bar {
   grid-column: 1 / -1; display: flex; align-items: center; gap: 10px;
   padding: 8px 4px 10px; margin-bottom: 4px;
-  border-bottom: 2px solid rgba(43,138,154,0.3);
+  border-bottom: 2px solid rgba(var(--accent-rgb),0.3);
   flex-wrap: wrap;
 }
 .endo-back-btn {
@@ -503,56 +564,93 @@ body {
 .endo-crumbs { font-size: 13px; color: var(--muted); line-height: 1.5; flex: 1; }
 .endo-crumb-name { color: var(--accent); font-weight: 600; }
 .item-card.endo-nav { border-color: var(--accent-light); }
-.item-card.endo-nav .mode-badge { background: rgba(43,138,154,0.1); color: var(--accent); }
+.item-card.endo-nav .mode-badge { background: rgba(var(--accent-rgb),0.1); color: var(--accent); }
 .endo-nav-arrow { font-size: 22px; color: var(--accent); font-weight: 200; line-height: 1; }
 /* ─── Endo 橘色選取 & 淡化 ──────────────────────────────────────── */
 .item-card.endo-open {
-  border-color: #BC7F30 !important;
-  background: #FEF6E8 !important;
-  box-shadow: 0 0 0 1px #BC7F30, var(--shadow-md) !important;
+  border-color: var(--gold) !important;
+  background: var(--gold-pale) !important;
+  box-shadow: 0 0 0 1px var(--gold), var(--shadow-md) !important;
 }
-.item-card.endo-open .mode-badge { background: rgba(188,127,48,0.12) !important; color: #BC7F30 !important; }
-.item-card.endo-open .endo-nav-arrow { color: #BC7F30 !important; }
+.item-card.endo-open .mode-badge { background: rgba(var(--gold-rgb),0.12) !important; color: var(--gold) !important; }
+.item-card.endo-open .endo-nav-arrow { color: var(--gold) !important; }
 .item-card.endo-ins {
   border-color: var(--ins-color) !important;
   background: var(--ins-pale) !important;
   box-shadow: 0 0 0 1px var(--ins-color), var(--shadow-md) !important;
 }
-.item-card.endo-ins .mode-badge { background: rgba(14,164,114,0.12) !important; color: var(--ins-color) !important; }
+.item-card.endo-ins .mode-badge { background: rgba(var(--ins-rgb),0.12) !important; color: var(--ins-color) !important; }
 .item-card.endo-dimmed {
   opacity: 0.22; pointer-events: auto;
   transform: none !important; box-shadow: var(--shadow-sm) !important;
 }
 .item-card.endo-dimmed:hover { opacity: 0.5; }
 .endo-sub-row .item-card.selected {
-  border-color: #BC7F30 !important;
-  background: #FEF6E8 !important;
-  box-shadow: 0 0 0 1px #BC7F30, var(--shadow-md) !important;
+  border-color: var(--gold) !important;
+  background: var(--gold-pale) !important;
+  box-shadow: 0 0 0 1px var(--gold), var(--shadow-md) !important;
 }
-.endo-sub-row .item-card.selected .mode-badge { background: rgba(188,127,48,0.12) !important; color: #BC7F30 !important; }
-.endo-sub-row .item-card.selected .endo-nav-arrow { color: #BC7F30 !important; }
+.endo-sub-row .item-card.selected .mode-badge { background: rgba(var(--gold-rgb),0.12) !important; color: var(--gold) !important; }
+.endo-sub-row .item-card.selected .endo-nav-arrow { color: var(--gold) !important; }
 .endo-sub-row.l3 .item-card.selected {
-  border-color: #BC7F30 !important;
-  background: #FEF6E8 !important;
+  border-color: var(--gold) !important;
+  background: var(--gold-pale) !important;
 }
-.endo-sub-row.l3 .item-card.selected .check-dot { background: #BC7F30 !important; }
+.endo-sub-row.l3 .item-card.selected .check-dot { background: var(--gold) !important; }
 
 
 .endo-path-bar {
   grid-column: 1 / -1; font-size: 13px; font-weight: 600; color: var(--accent);
   padding: 4px 0 8px; letter-spacing: 0.04em;
-  border-bottom: 2px solid rgba(43,138,154,0.2); margin-bottom: 8px;
+  border-bottom: 2px solid rgba(var(--accent-rgb),0.2); margin-bottom: 8px;
 }
 .endo-sub-row {
   grid-column: 1 / -1; background: var(--accent-pale);
   border-radius: var(--radius-sm); padding: 10px 10px 8px; margin-bottom: 2px;
 }
-.endo-sub-row.l3 { background: rgba(14,164,114,0.06); }
+.endo-sub-row.l3 { background: rgba(var(--ins-rgb),0.06); }
 .endo-sub-grid {
   display: grid; grid-template-columns: repeat(auto-fill,minmax(170px,1fr)); gap: 8px;
 }
 
 .endo-base-note { font-size: 12px; color: var(--muted); margin-top: 3px; word-break: keep-all; overflow-wrap: break-word; }
+
+/* ─── 自訂項目欄位標籤（依規範不使用 placeholder） ────────────────── */
+.custom-add-label {
+  display: block; font-size: 11.5px; color: var(--muted);
+  letter-spacing: 0.04em; margin: 0 0 3px 2px;
+}
+
+/* ─── 鍵盤快捷提示（分類頁） ────────────────────────────────────── */
+.nav-hint {
+  margin-left: auto; display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--muted); flex-shrink: 0;
+}
+.nav-hint kbd {
+  font-family: inherit; font-size: 11px; background: var(--surface);
+  border: 1px solid var(--border); border-bottom-width: 2px;
+  border-radius: 5px; padding: 1px 6px; color: var(--muted);
+}
+
+/* ─── 響應式 ─────────────────────────────────────────────────────── */
+@media screen and (max-width: 1240px) { :root { --panel-w: 322px; } }
+@media screen and (max-width: 1040px) { :root { --panel-w: 290px; } .nav-hint { display: none; } }
+
+/* 平板直式／窄視窗：清單改為下方區塊，避免左右擠壓 */
+@media screen and (max-width: 860px) {
+  body { height: auto; min-height: 100vh; overflow-y: auto; }
+  .banner { padding: 0 20px; height: auto; min-height: 76px; }
+  .banner-date { position: static; margin-left: auto; text-align: right; }
+  .banner-text { margin-top: 0; }
+  .layout { flex-direction: column; overflow: visible; }
+  .content { min-height: 68vh; }
+  .pricing-panel {
+    width: 100%; border-left: none; border-top: 2px solid var(--border);
+    box-shadow: none;
+  }
+  .panel-body { max-height: 46vh; }
+  #screen-category { padding: 16px 18px 22px; }
+}
 
 /* ─── Print ──────────────────────────────────────────────────────── */
 @page { margin: 0; size: A4; }
@@ -585,14 +683,15 @@ body {
     display: flex !important; justify-content: center !important;
     height: auto !important; padding: 10px 20px !important;
     background: #EEF3F7 !important;
-    box-shadow: none !important; border-bottom: 2px solid #1B3550;
+    box-shadow: none !important; border-bottom: 2px solid #152831;
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
     page-break-after: avoid; break-after: avoid;
     position: relative !important;
   }
-  .banner-name  { color: #1B2B38 !important; }
-  .banner-sub   { color: #64748B !important; }
-  .banner-date  { position: absolute !important; right: 20px !important; color: #64748B !important; }
+  .banner::after { display: none !important; }
+  .banner-name  { color: #152831 !important; }
+  .banner-sub   { color: #64757F !important; }
+  .banner-date  { position: absolute !important; right: 20px !important; color: #64757F !important; }
   .bd-time      { display: none !important; }
 
   /* 說明信件 */
@@ -613,7 +712,7 @@ body {
 
   /* 隱藏互動元素 */
   .content, .action-row, .interaction-hint, .toast,
-  .search-wrap, .back-btn, .panel-legend,
+  .search-wrap, .search-results, .back-btn, .panel-legend, .nav-hint, .restore-bar,
   .tooltip-popup { display: none !important; }
 
   /* layout：縮小上間距（單行距離） */
@@ -735,13 +834,13 @@ body {
 
         <!-- 搜尋列 -->
         <div class="search-wrap">
+          <label class="field-label" for="searchInput">搜尋檢查、治療或套組<kbd>Ctrl</kbd><kbd>K</kbd></label>
           <div class="search-box">
             <input class="search-input" id="searchInput" type="text"
-                   placeholder="搜尋"
                    autocomplete="off" spellcheck="false">
             <span class="search-icon" id="searchIcon" style="display:flex;align-items:center;justify-content:center;width:20px;height:20px;"><svg width="20" height="20" viewBox="0 0 28 28" fill="none" style="display:block">
-              <circle cx="12" cy="11" r="7" stroke="#64748B" stroke-width="1.8"/>
-              <line x1="17.5" y1="16.5" x2="24" y2="23" stroke="#64748B" stroke-width="2.2" stroke-linecap="round"/>
+              <circle cx="12" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/>
+              <line x1="17.5" y1="16.5" x2="24" y2="23" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
             </svg></span>
             <button class="search-clear" id="searchClear" title="清除">✕</button>
             <div class="search-results" id="searchResults"></div>
@@ -767,6 +866,10 @@ body {
             <div class="screen-desc"  id="catDescEl"></div>
           </div>
         </div>
+        <div class="nav-hint">
+          <span><kbd>Esc</kbd> 返回</span>
+          <span><kbd>Ctrl</kbd><kbd>K</kbd> 搜尋</span>
+        </div>
       </div>
       <div class="items-scroll">
         <div class="items-grid" id="itemsGrid"></div>
@@ -779,22 +882,38 @@ body {
   <aside class="pricing-panel">
     <div class="panel-head">
       <div class="patient-name-row">
-        <input type="text" id="patientNameInput" class="patient-name-input"
-               placeholder="請輸入稱謂（例：林先生）" autocomplete="off">
+        <label class="patient-name-label" for="patientNameInput">稱謂</label>
+        <input type="text" id="patientNameInput" class="patient-name-input" autocomplete="off">
         <span class="patient-greeting-label">您好</span>
       </div>
       <div class="panel-head-inner">
-        <div class="panel-head-title">📋 費用清單 <span class="cart-count zero" id="cartCount">0</span></div>
+        <div class="panel-head-title">
+          <span class="head-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="4" y="3.5" width="16" height="18" rx="2.4" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M9 3.5V2.6A1.1 1.1 0 0110.1 1.5h3.8A1.1 1.1 0 0115 2.6v.9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            <path d="M8 10h8M8 14h8M8 18h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg></span>
+          費用清單 <span class="cart-count zero" id="cartCount">0</span>
+        </div>
         <div class="panel-legend">
           <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>自費</div>
           <div class="legend-item"><div class="legend-dot" style="background:var(--ins-color)"></div>免自費</div>
-          <div class="legend-item" style="font-size:11px;opacity:.6;margin-left:4px">右鍵切換</div>
+          <div class="legend-item" style="font-size:11px;opacity:.6;margin-left:4px">右鍵／長按切換</div>
         </div>
       </div>
     </div>
     <div class="panel-body" id="panelBody">
+      <div class="restore-bar" id="restoreBar">
+        <span class="restore-text" id="restoreText"></span>
+        <button class="restore-btn" id="restoreBtn">還原</button>
+        <button class="restore-dismiss" id="restoreDismiss" title="不還原">✕</button>
+      </div>
       <div class="empty-state" id="emptyState">
-        <div class="empty-icon">🗒️</div>
+        <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="3.5" y="4" width="17" height="16.5" rx="2.4" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M3.5 9h17" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M7.5 13.5h6M7.5 16.8h3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg></div>
         <div class="empty-text">尚未選取任何項目<br>請從左側選擇檢查或治療項目</div>
       </div>
       <div id="cartList"></div>
@@ -826,7 +945,7 @@ body {
       </div>
       <div class="action-row">
         <button class="btn-clear" id="btnClear">清除全部</button>
-        <button class="btn-print" onclick="window.print()">列印清單</button>
+        <button class="btn-print" id="btnPrint">列印清單</button>
       </div>
     </div>
   </aside>
@@ -845,7 +964,10 @@ body {
 
 <!-- Tooltip -->
 <div class="tooltip-popup" id="tooltipPopup"></div>
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <span class="toast-msg" id="toastMsg"></span>
+  <button class="toast-action hidden" id="toastAction"></button>
+</div>
 
 <script>
 /* ═══════════════════════════════════════════════════════════════════
@@ -853,43 +975,43 @@ body {
    ═══════════════════════════════════════════════════════════════════ */
 const ICONS = {
   'health-check': `<svg viewBox="0 0 28 28" fill="none">
-    <rect x="4.5" y="4" width="19" height="22" rx="2.5" stroke="#1B3550" stroke-width="1.6"/>
-    <path d="M10 4V3a1.2 1.2 0 011.2-1.2h5.6A1.2 1.2 0 0118 3v1" stroke="#1B3550" stroke-width="1.6" stroke-linecap="round"/>
-    <path d="M7 16.5h2.8l2-5 3.2 9 2-4H21" stroke="#1B3550" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="4.5" y="4" width="19" height="22" rx="2.5" stroke="currentColor" stroke-width="1.6"/>
+    <path d="M10 4V3a1.2 1.2 0 011.2-1.2h5.6A1.2 1.2 0 0118 3v1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M7 16.5h2.8l2-5 3.2 9 2-4H21" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>`,
   'lab': `<svg viewBox="0 0 28 28" fill="none">
-    <path d="M10.5 4h7" stroke="#1B3550" stroke-width="1.6" stroke-linecap="round"/>
-    <path d="M12 4v8.5L6.2 20.2A2.3 2.3 0 008.3 24h11.4a2.3 2.3 0 002.1-3.8L16 12.5V4" stroke="#1B3550" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="10.5" cy="19.5" r="1.1" fill="#1B3550"/>
-    <circle cx="15.5" cy="21.5" r="1.1" fill="#1B3550"/>
-    <circle cx="13"   cy="17.5" r=".8"  fill="#1B3550"/>
+    <path d="M10.5 4h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M12 4v8.5L6.2 20.2A2.3 2.3 0 008.3 24h11.4a2.3 2.3 0 002.1-3.8L16 12.5V4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="10.5" cy="19.5" r="1.1" fill="currentColor"/>
+    <circle cx="15.5" cy="21.5" r="1.1" fill="currentColor"/>
+    <circle cx="13"   cy="17.5" r=".8"  fill="currentColor"/>
   </svg>`,
   'exam': `<svg viewBox="0 0 28 28" fill="none">
-    <circle cx="12" cy="11" r="7" stroke="#1B3550" stroke-width="1.6"/>
-    <line x1="17" y1="16" x2="23.5" y2="22.5" stroke="#1B3550" stroke-width="2.2" stroke-linecap="round"/>
-    <line x1="9"  y1="11" x2="15"  y2="11"   stroke="#1B3550" stroke-width="1.5" stroke-linecap="round"/>
-    <line x1="12" y1="8"  x2="12"  y2="14"   stroke="#1B3550" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="12" cy="11" r="7" stroke="currentColor" stroke-width="1.6"/>
+    <line x1="17" y1="16" x2="23.5" y2="22.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="9"  y1="11" x2="15"  y2="11"   stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="12" y1="8"  x2="12"  y2="14"   stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
   </svg>`,
   'endo': `<svg viewBox="0 0 34 28" fill="none">
-    <rect x="1.5" y="5" width="31" height="16" rx="2.5" stroke="#1B3550" stroke-width="1.6"/>
-    <line x1="1.5" y1="9" x2="32.5" y2="9" stroke="#1B3550" stroke-width="0.7" opacity="0.25"/>
-    <rect x="4.5" y="11.5" width="10" height="6.5" rx="1.2" stroke="#1B3550" stroke-width="1.3"/>
-    <path d="M5.8 15h1.8l1.2-2.5 1.8 5 1.2-2.5h1.5" stroke="#1B3550" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
-    <line x1="18" y1="6" x2="18" y2="21" stroke="#1B3550" stroke-width="0.7" opacity="0.2"/>
-    <circle cx="25" cy="15" r="3.5" stroke="#1B3550" stroke-width="1.4"/>
-    <circle cx="25" cy="15" r="1"   fill="#1B3550"/>
-    <circle cx="21" cy="11.5" r="1" fill="#1B3550" opacity="0.5"/>
-    <circle cx="21" cy="14.5" r="1" fill="#1B3550" opacity="0.5"/>
-    <circle cx="21" cy="17.5" r="1" fill="#1B3550" opacity="0.5"/>
-    <line   x1="12.5" y1="21" x2="12.5" y2="25.5" stroke="#1B3550" stroke-width="1.5" stroke-linecap="round"/>
-    <ellipse cx="12.5" cy="26.5" rx="3" ry="1.2" stroke="#1B3550" stroke-width="1.3"/>
+    <rect x="1.5" y="5" width="31" height="16" rx="2.5" stroke="currentColor" stroke-width="1.6"/>
+    <line x1="1.5" y1="9" x2="32.5" y2="9" stroke="currentColor" stroke-width="0.7" opacity="0.25"/>
+    <rect x="4.5" y="11.5" width="10" height="6.5" rx="1.2" stroke="currentColor" stroke-width="1.3"/>
+    <path d="M5.8 15h1.8l1.2-2.5 1.8 5 1.2-2.5h1.5" stroke="currentColor" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="18" y1="6" x2="18" y2="21" stroke="currentColor" stroke-width="0.7" opacity="0.2"/>
+    <circle cx="25" cy="15" r="3.5" stroke="currentColor" stroke-width="1.4"/>
+    <circle cx="25" cy="15" r="1"   fill="currentColor"/>
+    <circle cx="21" cy="11.5" r="1" fill="currentColor" opacity="0.5"/>
+    <circle cx="21" cy="14.5" r="1" fill="currentColor" opacity="0.5"/>
+    <circle cx="21" cy="17.5" r="1" fill="currentColor" opacity="0.5"/>
+    <line   x1="12.5" y1="21" x2="12.5" y2="25.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    <ellipse cx="12.5" cy="26.5" rx="3" ry="1.2" stroke="currentColor" stroke-width="1.3"/>
   </svg>`,
   'drip': `<svg viewBox="0 0 28 32" fill="none">
-    <path d="M14 4L14 1.5Q14 0 15.5 0Q17 0 17 1.5" stroke="#1B3550" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-    <path d="M8.5 4.5Q6 4.5 6 8L6 18.5Q6 24 14 24Q22 24 22 18.5L22 8Q22 4.5 19.5 4.5Z" stroke="#1B3550" stroke-width="1.6"/>
-    <line x1="7.5" y1="14.5" x2="20.5" y2="14.5" stroke="#1B3550" stroke-width="1" stroke-dasharray="2.5 2" opacity="0.35"/>
-    <line x1="14" y1="24" x2="14" y2="29.5" stroke="#1B3550" stroke-width="1.5" stroke-linecap="round"/>
-    <path d="M11.8 30Q14 27.5 16.2 30Q16.2 33 14 33Q11.8 33 11.8 30Z" fill="#1B3550" opacity="0.4"/>
+    <path d="M14 4L14 1.5Q14 0 15.5 0Q17 0 17 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+    <path d="M8.5 4.5Q6 4.5 6 8L6 18.5Q6 24 14 24Q22 24 22 18.5L22 8Q22 4.5 19.5 4.5Z" stroke="currentColor" stroke-width="1.6"/>
+    <line x1="7.5" y1="14.5" x2="20.5" y2="14.5" stroke="currentColor" stroke-width="1" stroke-dasharray="2.5 2" opacity="0.35"/>
+    <line x1="14" y1="24" x2="14" y2="29.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M11.8 30Q14 27.5 16.2 30Q16.2 33 14 33Q11.8 33 11.8 30Z" fill="currentColor" opacity="0.4"/>
   </svg>`,
 };
 
@@ -1450,10 +1572,32 @@ function nl2list(s){
   return s.split('\n').map(l=>`<div class="tooltip-line"><span class="tooltip-bullet">•</span><span>${esc(l.trim())}</span></div>`).join('');
 }
 
-function showToast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),1500);
+/* Toast：可帶一個動作按鈕（例如「復原」），有動作時顯示時間拉長 */
+function showToast(msg, actionLabel, actionFn){
+  const t   = document.getElementById('toast');
+  const m   = document.getElementById('toastMsg');
+  const btn = document.getElementById('toastAction');
+  m.textContent = msg;
+  clearTimeout(t._t);
+  if(actionLabel && typeof actionFn === 'function'){
+    btn.textContent = actionLabel;
+    btn.classList.remove('hidden');
+    t.classList.add('has-action');
+    btn.onclick = ()=>{
+      btn.onclick = null;
+      t.classList.remove('show','has-action');
+      btn.classList.add('hidden');
+      clearTimeout(t._t);
+      actionFn();
+    };
+    t.classList.add('show');
+    t._t = setTimeout(()=>{ t.classList.remove('show','has-action'); btn.classList.add('hidden'); btn.onclick=null; }, 6000);
+  } else {
+    btn.classList.add('hidden'); btn.onclick=null;
+    t.classList.remove('has-action');
+    t.classList.add('show');
+    t._t = setTimeout(()=>t.classList.remove('show'), 1500);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1510,6 +1654,10 @@ const searchResults = document.getElementById('searchResults');
 const searchIcon    = document.getElementById('searchIcon');
 const searchClear   = document.getElementById('searchClear');
 
+/* .screen 帶有 transform，會成為 fixed 子元素的定位基準，
+   因此把下拉選單移到 body 底下，確保永遠對齊視窗且不被裁切。 */
+document.body.appendChild(searchResults);
+
 searchInput.addEventListener('input', ()=>{
   const q = searchInput.value.trim();
   if(!q){ closeSearch(); return; }
@@ -1555,7 +1703,7 @@ searchClear.addEventListener('click', ()=>{
 });
 
 document.addEventListener('click', e=>{
-  if(!e.target.closest('.search-box')) closeSearch();
+  if(!e.target.closest('.search-box') && !e.target.closest('.search-results')) closeSearch();
 });
 
 function closeSearch(){
@@ -1588,14 +1736,30 @@ function runSearch(q){
   kbIndex = -1;
   const ql = q.toLowerCase();
   const hits = [];
+
+  /* 一般分類項目：可直接加入清單 */
   CATEGORIES.forEach(cat=>{
+    if(cat.id==='endo') return; /* 內視鏡另行處理（多層選項） */
     cat.items.forEach(item=>{
       if(item.type==='section') return;
       const haystack = (item.name+' '+item.desc+' '+(ITEM_NOTES[item.id]||'')).toLowerCase();
       if(haystack.includes(ql)){
-        hits.push({ catId:cat.id, catLabel:cat.label, item });
+        hits.push({ catId:cat.id, catLabel:cat.label, item, nav:false });
       }
     });
+  });
+
+  /* 內視鏡：因需逐層選擇鏡種／代餐／鎮靜，搜尋結果導向該分類而非直接加入 */
+  const endoLabel = (CATEGORIES.find(c=>c.id==='endo')||{}).label || '內視鏡';
+  const endoPool = [
+    ...ENDO_TREE.layer1.map(i=>({id:i.id,name:i.name,desc:i.desc||'',price:i.basePrice})),
+    ...ENDO_TREE.special.map(i=>({id:i.id,name:i.name,desc:i.desc||'',price:i.price})),
+    ...ENDO_TREE.selfPay.map(i=>({id:i.id,name:i.name,desc:i.desc||'',price:i.price}))
+  ];
+  endoPool.forEach(item=>{
+    if((item.name+' '+item.desc).toLowerCase().includes(ql)){
+      hits.push({ catId:'endo', catLabel:endoLabel, item, nav:true });
+    }
   });
 
   searchResults.innerHTML='';
@@ -1605,18 +1769,23 @@ function runSearch(q){
     hits.forEach(h=>{
       const div=document.createElement('div');
       div.className='search-result-item';
-      const priceStr = h.item.price>0 ? `NT$ ${fmtPrice(h.item.price)}` : '待建檔';
+      const priceStr = h.item.price>0
+        ? (h.nav && h.catId==='endo' && ENDO_TREE.layer1.some(l=>l.id===h.item.id)
+            ? `NT$ ${fmtPrice(h.item.price)} 起`
+            : `NT$ ${fmtPrice(h.item.price)}`)
+        : '待建檔';
       const descFirst = (h.item.desc||'').split('\n')[0];
       div.innerHTML=`
         <span class="sr-cat-badge">${esc(h.catLabel)}</span>
         <span class="sr-name">${esc(h.item.name)}</span>
-        <span class="sr-desc">${esc(descFirst)}</span>
+        <span class="sr-desc">${esc(h.nav ? (descFirst||'前往內視鏡選單完成選擇') : descFirst)}</span>
         <span class="sr-price">${esc(priceStr)}</span>
       `;
       div.addEventListener('click',()=>{
         closeSearch();
         searchInput.value='';
-        addItemFromSearch(h.catId, h.item.id);
+        if(h.nav){ openCategory(h.catId); showToast(`請於選單中完成「${h.item.name}」的選項`); }
+        else     { addItemFromSearch(h.catId, h.item.id); }
       });
       searchResults.appendChild(div);
     });
@@ -1626,12 +1795,16 @@ function runSearch(q){
 
 }
 
+/* 下拉選單使用 fixed 定位，不會被捲動容器裁切 */
 function positionSearchResults(){
   const box = document.querySelector('.search-box');
   if(!box) return;
   const r  = box.getBoundingClientRect();
   const sr = document.getElementById('searchResults');
-  sr.style.maxHeight = Math.min(360, window.innerHeight - r.bottom - 16) + 'px';
+  sr.style.left  = r.left + 'px';
+  sr.style.width = r.width + 'px';
+  sr.style.top   = (r.bottom + 6) + 'px';
+  sr.style.maxHeight = Math.max(120, Math.min(360, window.innerHeight - r.bottom - 20)) + 'px';
 }
 
 function navigateToItem(catId, itemId){
@@ -1657,8 +1830,10 @@ function appendCustomAddCard(grid,catLabel){
     if(card.querySelector('.custom-add-input')) return; /* 已在編輯中，忽略 */
     card.className='item-card'; card.style.cursor='default';
     card.innerHTML='<div class="custom-add-form" style="width:100%">'
-      +'<input class="custom-add-input" type="text" placeholder="項目名稱" autocomplete="off">'
-      +'<input class="custom-add-input" type="number" placeholder="金額（元）" min="0">'
+      +'<span class="custom-add-label">項目名稱</span>'
+      +'<input class="custom-add-input" type="text" autocomplete="off">'
+      +'<span class="custom-add-label">金額（元）</span>'
+      +'<input class="custom-add-input" type="number" min="0">'
       +'<div class="custom-add-btn-row">'
       +'<button class="custom-add-confirm">確認加入</button>'
       +'<button class="custom-add-cancel-btn">取消</button>'
@@ -1703,6 +1878,7 @@ function buildHome(){
     card.addEventListener('click',()=>openCategory(cat.id));
     grid.appendChild(card);
   });
+  applyCardA11y();
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1782,6 +1958,7 @@ function buildItemsGrid(cat){
   });
   /* 檢查及處置：其他檢查最後一位（= grid 最末） */
   if(cat.id==='exam') appendCustomAddCard(grid,cat.label);
+  applyCardA11y();
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -2212,6 +2389,8 @@ function buildEndoGrid(){
     grid.appendChild(pc);
   }
 
+  applyCardA11y();
+
   /* 展開後：1.統一 sp-nm 高度 2.統一卡片高度（自費 & 常規） 3.垂直置中 */
   requestAnimationFrame(function(){
     /* ① 所有 sp-nm 統一為最高者 */
@@ -2476,6 +2655,8 @@ function renderCart(){
     document.getElementById('selfTotal').textContent='NT$ 0';
     var dd=document.getElementById('discountDisplay');if(dd&&dd.tagName==='SPAN')dd.textContent='— NT$ 0';
     document.getElementById('grandTotal').textContent='0';
+    _prevCartIds=[];
+    saveState();
     return;
   }
   emptyState.style.display='none';
@@ -2490,6 +2671,7 @@ function renderCart(){
     if(cat){ const lbl=document.createElement('div'); lbl.className='cart-group-label'; lbl.textContent=cat; cartList.appendChild(lbl); }
     items.forEach(item=>{
       const row=document.createElement('div'); row.className='cart-item';
+      row.dataset.cid=item.id;
       const notes=ITEM_NOTES[item.id]||ITEM_DESCS[item.id]||'';
 
       let priceEl;
@@ -2589,21 +2771,71 @@ function renderCart(){
     var noteEl=document.getElementById('endoNote');
     if(noteEl) noteEl.classList.toggle('active',hasEndo||hasHcDE);
   })();
+  flagNewCartRows(cartList);
+  saveState();
+}
+
+/* 新加入的項目：捲入可視範圍並短暫標示（長清單時才看得出加了什麼） */
+let _prevCartIds = [];
+function flagNewCartRows(cartList){
+  const nowIds = cart.map(c=>c.id);
+  const added  = nowIds.filter(id=>!_prevCartIds.includes(id));
+  _prevCartIds = nowIds;
+  if(!added.length) return;
+  const row = cartList.querySelector('.cart-item[data-cid="'+cssEsc(added[added.length-1])+'"]');
+  if(!row) return;
+  row.classList.add('just-added');
+  setTimeout(()=>row.classList.remove('just-added'), 1400);
+  const body = document.getElementById('panelBody');
+  if(body){
+    const rt = row.offsetTop, rb = rt + row.offsetHeight;
+    if(rt < body.scrollTop || rb > body.scrollTop + body.clientHeight){
+      body.scrollTo({ top: Math.max(0, rt - body.clientHeight/2 + row.offsetHeight/2), behavior:'smooth' });
+    }
+  }
+}
+function cssEsc(s){
+  return (window.CSS && CSS.escape) ? CSS.escape(s) : String(s).replace(/["\\]/g,'\\$&');
 }
 
 function removeItem(id){
-  const item=cart.find(c=>c.id===id); cart=cart.filter(c=>c.id!==id);
-  if(item) showToast(`已移除：${item.name}`);
+  const item=cart.find(c=>c.id===id);
+  if(!item){ return; }
+  const snapshot=cart.slice();
+  cart=cart.filter(c=>c.id!==id);
+  showToast(`已移除：${item.name}`, '復原', ()=>{
+    cart=snapshot; _prevCartIds=cart.map(c=>c.id);
+    renderCart(); if(currentCat) buildItemsGrid(currentCat);
+    showToast(`已復原：${item.name}`);
+  });
   renderCart(); if(currentCat) buildItemsGrid(currentCat);
 }
 
 document.getElementById('btnClear').addEventListener('click',()=>{
-  if(!cart.length) return;
-  cart=[]; paidAmount=0; manualDiscountOverride=null;
+  if(!cart.length){ showToast('清單目前是空的'); return; }
+  /* 誤觸會清掉整份說明，保留快照供復原 */
+  const snap={cart:cart.slice(), paid:paidAmount, disc:manualDiscountOverride,
+              dismissed:new Set(dismissedDiscounts)};
+  const n=cart.length;
+  cart=[]; paidAmount=0; manualDiscountOverride=null; dismissedDiscounts=new Set();
   var pd=document.getElementById('paidDisplay');
   if(pd&&pd.tagName==='SPAN') pd.textContent='— NT$ 0';
   renderCart(); if(currentCat) buildItemsGrid(currentCat);
-  showToast('已清除所有項目');
+  showToast(`已清除 ${n} 個項目`, '復原', ()=>{
+    cart=snap.cart; paidAmount=snap.paid; manualDiscountOverride=snap.disc;
+    dismissedDiscounts=snap.dismissed;
+    var pd2=document.getElementById('paidDisplay');
+    if(pd2&&pd2.tagName==='SPAN') pd2.textContent='— NT$ '+fmtPrice(paidAmount);
+    _prevCartIds=cart.map(c=>c.id);
+    renderCart(); if(currentCat) buildItemsGrid(currentCat);
+    showToast('已復原清單');
+  });
+});
+
+/* 列印前先確認清單不是空的 */
+document.getElementById('btnPrint').addEventListener('click',()=>{
+  if(!cart.length){ showToast('清單是空的，請先選取項目'); return; }
+  window.print();
 });
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -2672,8 +2904,167 @@ document.getElementById('discountBlock').addEventListener('click',function(e){
 bindPaidDisplay();
 bindDiscountDisplay();
 
+/* ═══════════════════════════════════════════════════════════════════
+   狀態保存（避免誤關視窗／重新整理時整份清單消失）
+   刻意不自動套用：不同病人之間若自動還原會造成費用張冠李戴，
+   因此改為載入時詢問是否還原。
+   ═══════════════════════════════════════════════════════════════════ */
+const LS_KEY = 'muzicheng_planner_state_v1';
+const RESTORE_MAX_AGE = 6 * 60 * 60 * 1000; /* 6 小時內才提示還原 */
+let _restoring = false;
+let _initDone  = false;   /* 初始化那次渲染不寫入，以免覆蓋掉待還原的紀錄 */
+
+function saveState(){
+  if(_restoring || !_initDone) return;
+  try{
+    const pi = document.getElementById('patientNameInput');
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      v: 1,
+      ts: Date.now(),
+      cart: cart,
+      paid: paidAmount || 0,
+      disc: manualDiscountOverride,
+      dismissed: Array.from(dismissedDiscounts),
+      patient: pi ? pi.value : ''
+    }));
+  }catch(e){ /* 隱私模式或容量不足時忽略 */ }
+}
+
+function readSavedState(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return null;
+    const s = JSON.parse(raw);
+    if(!s || !Array.isArray(s.cart) || s.cart.length === 0) return null;
+    if(!s.ts || Date.now() - s.ts > RESTORE_MAX_AGE) return null;
+    return s;
+  }catch(e){ return null; }
+}
+
+function applySavedState(s){
+  _restoring = true;
+  cart = s.cart;
+  paidAmount = s.paid || 0;
+  manualDiscountOverride = (s.disc === null || s.disc === undefined) ? null : s.disc;
+  dismissedDiscounts = new Set(s.dismissed || []);
+  const pi = document.getElementById('patientNameInput');
+  if(pi && s.patient){
+    pi.value = s.patient;
+    pi.dispatchEvent(new Event('input', {bubbles:true}));
+  }
+  const pd = document.getElementById('paidDisplay');
+  if(pd && pd.tagName === 'SPAN') pd.textContent = '— NT$ ' + fmtPrice(paidAmount);
+  _prevCartIds = cart.map(c=>c.id);
+  _restoring = false;
+  renderCart();
+  if(currentCat) buildItemsGrid(currentCat);
+}
+
+(function initRestorePrompt(){
+  const saved = readSavedState();
+  const bar   = document.getElementById('restoreBar');
+  if(!saved || !bar) return;
+  const mins = Math.round((Date.now() - saved.ts) / 60000);
+  const when = mins < 1 ? '剛剛' : mins < 60 ? mins + ' 分鐘前' : Math.round(mins/60) + ' 小時前';
+  document.getElementById('restoreText').textContent =
+    `有 ${when}未完成的清單（${saved.cart.length} 個項目${saved.patient ? '．' + saved.patient : ''}）`;
+  bar.classList.add('show');
+  document.getElementById('restoreBtn').addEventListener('click', function(){
+    bar.classList.remove('show');
+    applySavedState(saved);
+    showToast('已還原上次的清單');
+  });
+  document.getElementById('restoreDismiss').addEventListener('click', function(){
+    bar.classList.remove('show');
+    try{ localStorage.removeItem(LS_KEY); }catch(e){}
+  });
+})();
+
+/* 稱謂變更時一併保存 */
+(function(){
+  const pi = document.getElementById('patientNameInput');
+  if(pi) pi.addEventListener('input', saveState);
+})();
+
+/* ═══════════════════════════════════════════════════════════════════
+   鍵盤操作：Ctrl/⌘+K 或 / 叫出搜尋、Esc 返回選單
+   ═══════════════════════════════════════════════════════════════════ */
+function isTypingTarget(el){
+  if(!el) return false;
+  const t = el.tagName;
+  return t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT' || el.isContentEditable;
+}
+
+function focusSearch(){
+  if(currentCat) goHome();
+  setTimeout(function(){
+    const el = document.getElementById('searchInput');
+    if(el){ el.focus(); el.select(); }
+  }, currentCat ? 0 : 60);
+}
+
+document.addEventListener('keydown', function(e){
+  if((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')){
+    e.preventDefault(); focusSearch(); return;
+  }
+  if(e.key === '/' && !isTypingTarget(e.target)){
+    e.preventDefault(); focusSearch(); return;
+  }
+  if(e.key === 'Escape' && !isTypingTarget(e.target) && currentCat){
+    goHome();
+  }
+});
+
+/* 卡片支援鍵盤操作（Enter／空白鍵＝點選） */
+function applyCardA11y(){
+  document.querySelectorAll('.cat-card, .item-card').forEach(function(el){
+    if(el.hasAttribute('tabindex')) return;
+    el.setAttribute('tabindex', '0');
+    el.setAttribute('role', 'button');
+  });
+}
+document.addEventListener('keydown', function(e){
+  if(e.key !== 'Enter' && e.key !== ' ') return;
+  const card = e.target.closest && e.target.closest('.cat-card, .item-card');
+  if(!card || isTypingTarget(e.target)) return;
+  e.preventDefault();
+  card.click();
+});
+
+/* 觸控裝置：長按 = 右鍵（切換自費／免自費）。滑鼠操作完全不受影響。 */
+(function(){
+  let lpTimer = null, lpFired = false;
+  document.addEventListener('pointerdown', function(e){
+    if(e.pointerType !== 'touch') return;
+    const card = e.target.closest('.item-card[data-id], .cart-item');
+    if(!card) return;
+    lpFired = false;
+    lpTimer = setTimeout(function(){
+      lpFired = true;
+      card.dispatchEvent(new MouseEvent('contextmenu', {bubbles:true, cancelable:true}));
+      if(navigator.vibrate) navigator.vibrate(12);
+    }, 550);
+  }, {passive:true});
+  ['pointerup','pointermove','pointercancel','pointerleave'].forEach(function(ev){
+    document.addEventListener(ev, function(){ clearTimeout(lpTimer); }, {passive:true});
+  });
+  /* 長按已處理過，攔掉隨後的 click 以免又被切換一次 */
+  document.addEventListener('click', function(e){
+    if(!lpFired) return;
+    lpFired = false;
+    e.preventDefault(); e.stopPropagation();
+  }, true);
+})();
+
+/* 捲動時同步搜尋下拉位置 */
+document.addEventListener('scroll', function(){
+  if(document.getElementById('searchResults').classList.contains('open'))
+    positionSearchResults();
+}, true);
+
 /* Init */
-buildHome(); renderCart();
+buildHome(); renderCart(); applyCardA11y();
+_initDone = true;
 </script>
 </body>
 </html>
