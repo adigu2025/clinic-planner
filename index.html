@@ -291,10 +291,7 @@ body {
   box-shadow: var(--shadow-sm); position: relative;
   user-select: none; -webkit-user-select: none;
 }
-/* 自費內視鏡：name 固定最小高度讓說明文字起始位置一致 */
-.sp-nm { min-height: 2.8em; display: block; }
-/* 自費內視鏡子選單卡片：高度與 L1 卡片一致 */
-.sp-sub-row .item-card { min-height: 140px; }
+/* 自費內視鏡：卡片不放說明文字（改置於備註），高度統一由 JS 對齊常規內視鏡 */
 .item-card:hover:not(.selected):not(.ins-mode) { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--border-strong); }
 .item-card.selected  { border-color: var(--accent); background: var(--accent-pale); box-shadow: 0 0 0 1px var(--accent), var(--shadow-md); transform: translateY(-1px); }
 .item-card.ins-mode  { border-color: var(--ins-color); background: var(--ins-pale); box-shadow: 0 0 0 1px var(--ins-color), var(--shadow-md); transform: translateY(-1px); }
@@ -2332,9 +2329,10 @@ function buildEndoGrid(){
         var fid='en_gc_self|'+l2.id;
         var sel2=!!cart.find(function(x){return x.id===fid;});
         var l2c=document.createElement('div'); l2c.className='item-card'+(sel2?' selected':'');
+        l2c.dataset.id=fid;  /* 啟用 hover 備註 */
+        /* 屬自費內視鏡區：說明文字改置於備註 */
         l2c.innerHTML='<div class="mode-badge self">自費</div>'
           +'<div class="item-name">'+(l2.name.length>4?esc(l2.name.slice(0,4))+'<br>'+esc(l2.name.slice(4)):esc(l2.name))+'</div>'
-          +'<div class="item-desc">'+esc(l2.desc||'')+'</div>'
           +'<div class="endo-add-price">+ NT '+fmtPrice(l2.addPrice)+'</div>'
           +'<div class="check-dot">✓</div>';
         (function(l1o,l2o){l2c.onclick=function(){
@@ -2375,10 +2373,11 @@ function buildEndoGrid(){
   var pathItem=ENDO_TREE.selfPay.find(function(sp){return sp.id==='en_sp_path';});
   if(pathItem){
     var pathCount=cart.filter(function(x){return x.id.startsWith('en_sp_path');}).length;
-    var pc=document.createElement('div'); pc.className='item-card'+(pathCount>0?' selected':'');
+    var pc=document.createElement('div'); pc.className='item-card sp-card'+(pathCount>0?' selected':'');
+    pc.dataset.id=pathItem.id;  /* 啟用 hover 備註 */
+    /* 說明文字改置於備註；件數併入名稱，維持單行高度不因加選而變動 */
     pc.innerHTML='<div class="mode-badge self">自費</div>'
-      +'<div class="item-name">'+esc(pathItem.name)+'</div>'
-      +'<div class="item-desc">'+esc(pathItem.desc)+(pathCount>0?' ×'+pathCount:'')+'</div>'
+      +'<div class="item-name">'+esc(pathItem.name)+(pathCount>0?' ×'+pathCount:'')+'</div>'
       +'<div class="item-price-row"><span class="price-currency">NT$</span><span class="price-val">'+fmtPrice(pathItem.price)+'</span></div>'
       +'<div class="check-dot">✓</div>';
     pc.onclick=function(e){
@@ -2393,50 +2392,29 @@ function buildEndoGrid(){
 
   applyCardA11y();
 
-  /* 展開後：1.統一 sp-nm 高度 2.統一卡片高度（自費 & 常規） 3.垂直置中 */
+  /* 展開後：① 以常規 L1 為基準統一所有卡片高度 ② 垂直置中
+     自費內視鏡卡片已無說明文字，結構與常規 L1 相同，因此共用同一基準高度；
+     單一 rAF 完成量測與套用，避免多次改尺寸造成選取時畫面跳動。 */
   requestAnimationFrame(function(){
-    /* ① 所有 sp-nm 統一為最高者 */
-    var nms=grid.querySelectorAll('.sp-nm');
-    var maxNm=0;
-    nms.forEach(function(n){ n.style.height=''; maxNm=Math.max(maxNm,n.offsetHeight); });
-    nms.forEach(function(n){ n.style.height=maxNm+'px'; });
+    /* ① 量測常規 L1 自然高度取最大，套用到全部 L1 + 子選單（含自費內視鏡） */
+    var allL1=grid.querySelectorAll('.reg-l1');
+    var sized=grid.querySelectorAll('.endo-sub-row .item-card, .sp-card');
+    /* 先重置 inline 樣式量真實高度 */
+    allL1.forEach(function(c){ c.style.minHeight=''; });
+    sized.forEach(function(c){ c.style.minHeight=''; });
+    var maxRegH=0;
+    allL1.forEach(function(c){ maxRegH=Math.max(maxRegH,c.offsetHeight); });
+    if(maxRegH>0){
+      allL1.forEach(function(c){ c.style.minHeight=maxRegH+'px'; });
+      sized.forEach(function(c){ c.style.minHeight=maxRegH+'px'; });
+    }
 
-    requestAnimationFrame(function(){
-      /* ② 自費內視鏡：sp-card 與 sp-sub-row 卡片等高 */
-      var spCards=grid.querySelectorAll('.sp-card');
-      var maxSp=0;
-      spCards.forEach(function(c){ maxSp=Math.max(maxSp,c.offsetHeight); });
-      if(maxSp>0){
-        spCards.forEach(function(c){ c.style.minHeight=maxSp+'px'; });
-        grid.querySelectorAll('.sp-sub-row .item-card').forEach(function(c){
-          c.style.minHeight=maxSp+'px';
-        });
-      }
-
-      /* ③ 常規內視鏡：量測所有 reg-l1 自然高度取最大，套用到全部 L1 + 子選單
-             → L1 三個按鈕高度一致，展開前後不改變 */
-      var allL1=grid.querySelectorAll('.reg-l1');
-      /* 先重置 inline 樣式量真實高度 */
-      allL1.forEach(function(c){ c.style.minHeight=''; });
-      grid.querySelectorAll('.endo-sub-row:not(.sp-sub-row) .item-card').forEach(function(c){ c.style.minHeight=''; });
-      var maxRegH=0;
-      allL1.forEach(function(c){ maxRegH=Math.max(maxRegH,c.offsetHeight); });
-      if(maxRegH>0){
-        /* 套用到所有 L1（統一高度，不因展開改變） */
-        allL1.forEach(function(c){ c.style.minHeight=maxRegH+'px'; });
-        /* 套用到子選單卡片（與 L1 等高） */
-        grid.querySelectorAll('.endo-sub-row:not(.sp-sub-row) .item-card').forEach(function(c){
-          c.style.minHeight=maxRegH+'px';
-        });
-      }
-
-      /* ④ 垂直置中 */
-      var openCard=grid.querySelector('.endo-open');
-      if(!openCard) return;
-      var scroll=document.querySelector('.items-scroll');
-      if(!scroll) return;
-      scroll.scrollTo({top: openCard.offsetTop-(scroll.clientHeight-openCard.offsetHeight)/2, behavior:'smooth'});
-    });
+    /* ② 垂直置中 */
+    var openCard=grid.querySelector('.endo-open');
+    if(!openCard) return;
+    var scroll=document.querySelector('.items-scroll');
+    if(!scroll) return;
+    scroll.scrollTo({top: openCard.offsetTop-(scroll.clientHeight-openCard.offsetHeight)/2, behavior:'smooth'});
   });
 }
 
@@ -2455,9 +2433,9 @@ function renderSpItem(grid,sp,l2arr,l3arr){
   var sc=document.createElement('div');
   sc.className='item-card endo-nav sp-card'+(isOpen?' endo-open':inCart?' selected':isDimmed?' endo-dimmed':'');
   sc.dataset.id=sp.id;
+  /* 說明文字不放在卡片上（改由備註呈現：hover 顯示、列印顯示） */
   sc.innerHTML='<div class="mode-badge self">自費</div>'
-    +'<div class="item-name sp-nm">'+esc(sp.name)+'</div>'
-    +(sp.desc?'<div class="item-desc">'+esc(sp.desc)+'</div>':'')
+    +'<div class="item-name">'+esc(sp.name)+'</div>'
     +'<div class="item-price-row"><span class="price-currency">NT$</span><span class="price-val">'+fmtPrice(sp.price)+' 起</span></div>'
     +'<div class="endo-nav-arrow">'+(isOpen?'▾':'›')+'</div>';
   (function(item){sc.onclick=function(){
@@ -2475,9 +2453,9 @@ function renderSpItem(grid,sp,l2arr,l3arr){
       var l2fid=sp.id+'|'+l2.id;
       var l2inCart=!!cart.find(function(x){return x.id===l2fid;});
       var l2c=document.createElement('div'); l2c.className='item-card'+(l2inCart?' selected':'');
+      l2c.dataset.id=l2fid;  /* 啟用 hover 備註 */
       l2c.innerHTML='<div class="mode-badge self">自費</div>'
         +'<div class="item-name">'+(l2.name.length>5?esc(l2.name.slice(0,5))+'<br>'+esc(l2.name.slice(5)):esc(l2.name))+'</div>'
-        +(l2.desc?'<div class="item-desc">'+esc(l2.desc)+'</div>':'')
         +'<div class="endo-add-price">+ NT '+fmtPrice(l2.addPrice)+'</div>'
         +'<div class="check-dot">✓</div>';
       (function(item,l2o){l2c.onclick=function(){toggleSpL2(item,l2o);};})(sp,l2);
@@ -2539,6 +2517,28 @@ var SP_COLON_SED=[
   {id:'sp_c_l',name:'輕中度鎮靜', addPrice:2500},
   {id:'sp_c_a',name:'麻醉',       addPrice:4000},
 ];
+
+/* ─ 自費內視鏡：卡片上不顯示說明文字，改登錄為備註 ──────────────────
+   登錄後 hover tooltip 與列印清單都會自動帶出（兩者皆讀 ITEM_DESCS）。
+   key 需與卡片 data-id／購物車 id 一致：L1 為 sp.id，L2 為 sp.id|l2.id。 */
+(function registerSelfPayNotes(){
+  ENDO_TREE.selfPay.forEach(function(sp){
+    if(sp.desc) ITEM_DESCS[sp.id]=sp.desc;
+    /* 與 buildEndoGrid 的分組方式一致 */
+    var l2arr = sp.name.indexOf('胃鏡')===0   ? SP_GASTRO_SCOPE
+              : sp.name.indexOf('大腸鏡')===0 ? SP_COLON_PREP
+              : null;
+    if(!l2arr) return;
+    l2arr.forEach(function(l2){
+      if(l2.desc) ITEM_DESCS[sp.id+'|'+l2.id]=l2.desc;
+    });
+  });
+  /* 胃鏡＋大腸鏡（完全自費）沿用常規三層資料，同樣置於自費內視鏡區 */
+  var gcSelf=ENDO_TREE.layer1.find(function(l){return l.id==='en_gc_self';});
+  if(gcSelf) gcSelf.layer2.forEach(function(l2){
+    if(l2.desc) ITEM_DESCS['en_gc_self|'+l2.id]=l2.desc;
+  });
+})();
 
 function _spAutoL1(spItem){
   if(!cart.find(function(x){return x.id===spItem.id;}))
