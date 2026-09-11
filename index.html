@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- 院內作業工具，非對外宣傳頁面：不開放搜尋引擎收錄 -->
+<meta name="robots" content="noindex,nofollow">
 <title>木子澄安診所 — 醫療規劃系統</title>
 <style>
 /* ─── 自訂新增項目 ────────────────────────────────────────────────── */
@@ -123,11 +125,19 @@ body {
 #screen-home::-webkit-scrollbar { width: 6px; }
 #screen-home::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 #home-inner {
+  position: relative;
   min-height: 100%; width: 100%;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   gap: clamp(18px, 3.6vh, 40px);
-  padding: clamp(24px, 5vh, 60px) 32px clamp(28px, 5vh, 56px);
+  padding: clamp(24px, 5vh, 60px) 32px clamp(44px, 6vh, 64px);
+}
+/* 最後改版日期：固定於首頁左下角。脫離 flex 流排，不影響主內容置中 */
+.app-revision {
+  position: absolute; left: 32px; bottom: 14px;
+  text-align: left; font-size: 12.5px;
+  color: var(--muted); opacity: .75;
+  letter-spacing: 0.02em; pointer-events: none;
 }
 
 .home-hero { width: 100%; max-width: 780px; text-align: center; }
@@ -420,6 +430,24 @@ body {
 .cart-item-price.edited { color: var(--gold); }
 .price-edit-hint { font-size: 10px; color: var(--muted); opacity: 0.6; display: none; }
 .cart-item:hover .price-edit-hint:not(.ins-hint) { display: block; }
+/* 還原定價 */
+.price-revert-btn {
+  background: none; border: none; cursor: pointer; font-family: inherit;
+  font-size: 10px; color: var(--gold); padding: 1px 3px; border-radius: 4px;
+  white-space: nowrap; transition: background 0.15s;
+}
+.price-revert-btn:hover { background: rgba(var(--gold-rgb),0.12); }
+/* 件數加減（病理檢查費） */
+.qty-ctrl { display: inline-flex; align-items: center; gap: 2px; margin-left: 2px; }
+.qty-btn {
+  width: 18px; height: 18px; line-height: 1; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 5px;
+  color: var(--accent); font-family: inherit; font-size: 12px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+.qty-btn:hover { border-color: var(--accent); background: var(--accent-pale); }
+.qty-num { font-size: 12px; font-weight: 700; color: var(--text); min-width: 14px; text-align: center; }
 .price-edit-input {
   width: 80px; font-size: 17px; font-weight: 700; color: var(--primary);
   border: none; border-bottom: 2px solid var(--accent);
@@ -503,6 +531,16 @@ body {
 }
 .toast-action:hover { background: rgba(255,255,255,0.26); }
 .toast-action.hidden { display: none; }
+
+/* ─── 重複計費提示（螢幕限定，不列印） ──────────────────────────── */
+.warn-block {
+  margin: 0 0 8px; padding: 9px 12px;
+  background: var(--danger-pale); border: 1px solid #EBC3BF;
+  border-left: 3px solid var(--danger);
+  border-radius: var(--radius-sm); animation: slideUp 0.2s var(--ease);
+}
+.warn-title { font-size: 12px; font-weight: 700; color: var(--danger); letter-spacing: 0.04em; margin-bottom: 3px; }
+.warn-text  { font-size: 12.5px; color: #7A3A34; line-height: 1.55; }
 
 /* ─── 還原上次清單提示列 ────────────────────────────────────────── */
 .restore-bar {
@@ -624,6 +662,32 @@ body {
   letter-spacing: 0.04em; margin: 0 0 3px 2px;
 }
 
+/* ─── 分類內即時篩選 ───────────────────────────────────────────── */
+.cat-filter { display: flex; align-items: center; gap: 7px; margin-left: 18px; flex-shrink: 0; }
+.cat-filter.hidden { display: none; }
+.cat-filter-label { font-size: 13px; color: var(--muted); white-space: nowrap; }
+.cat-filter-box { position: relative; display: flex; align-items: center; }
+.cat-filter-input {
+  width: 190px; height: 32px; padding: 0 30px 0 12px;
+  border: 1.5px solid var(--border); border-radius: 16px;
+  font-family: inherit; font-size: 14px; color: var(--text);
+  background: var(--surface); outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s, width 0.18s var(--ease);
+}
+.cat-filter-input:focus { border-color: var(--accent); box-shadow: var(--focus-ring); width: 230px; }
+.cat-filter-clear {
+  position: absolute; right: 8px; background: none; border: none; cursor: pointer;
+  color: var(--muted); font-size: 15px; line-height: 1; padding: 3px; border-radius: 50%;
+  display: none;
+}
+.cat-filter-clear.visible { display: block; }
+.cat-filter-clear:hover { color: var(--text); background: var(--bg); }
+.cat-filter-count { font-size: 12px; color: var(--muted); white-space: nowrap; min-width: 48px; }
+.filter-empty {
+  grid-column: 1 / -1; padding: 36px 16px; text-align: center;
+  font-size: 15px; color: var(--muted); line-height: 1.8;
+}
+
 /* ─── 鍵盤快捷提示（分類頁） ────────────────────────────────────── */
 .nav-hint {
   margin-left: auto; display: flex; align-items: center; gap: 8px;
@@ -712,10 +776,16 @@ body {
   .letter-remark p { margin: 0; line-height: 1.7; }
   .letter-contact { margin: 1px 0 0; }
   .letter-sign { text-align: right; margin-top: 4px; }
+  /* 價目版本：低調呈現，不干擾正文 */
+  .letter-version {
+    margin: 2px 0 0 !important; text-align: right !important;
+    font-size: 9.5px !important; color: #8A979E !important; line-height: 1.4 !important;
+  }
 
   /* 隱藏互動元素 */
   .content, .action-row, .interaction-hint, .toast,
   .search-wrap, .search-results, .back-btn, .panel-legend, .nav-hint, .restore-bar,
+  .app-revision, .cat-filter, .warn-block,
   .tooltip-popup { display: none !important; }
 
   /* layout：縮小上間距（單行距離） */
@@ -758,7 +828,12 @@ body {
     align-items: flex-start !important;
     box-shadow: none !important;   /* 剛加入的標示不可印出 */
     transition: none !important;
+    /* 單一項目不跨頁：避免名稱與金額被切到不同頁 */
+    break-inside: avoid; page-break-inside: avoid;
   }
+  /* 折扣區塊與結算區同樣不可被切斷 */
+  .discount-block, .discount-row, .panel-foot, .grand-row, .sub-total-row,
+  .letter-remark p, .cart-notes-print { break-inside: avoid; page-break-inside: avoid; }
   .cart-item-body {
     display: flex !important;
     flex-wrap: wrap !important;
@@ -782,6 +857,8 @@ body {
   .cart-item-price:hover { background: transparent !important; }
   .cart-remove-btn  { display: none !important; }
   .price-edit-hint  { display: none !important; }
+  .price-revert-btn { display: none !important; }
+  .qty-ctrl         { display: none !important; }
 
   /* 備註：緊接項目下方，去掉「包含項目」標題 */
   .cart-notes-print {
@@ -857,6 +934,9 @@ body {
           <div class="cat-grid" id="catGrid"></div>
         </div>
 
+        <!-- 最後改版日期（左下角灰色小字） -->
+        <div class="app-revision" id="appRevision"></div>
+
       </div>
     </div>
 
@@ -870,6 +950,15 @@ body {
             <div class="screen-title" id="catTitleEl"></div>
             <div class="screen-desc"  id="catDescEl"></div>
           </div>
+        </div>
+        <div class="cat-filter hidden" id="catFilter">
+          <label class="cat-filter-label" for="catFilterInput">篩選</label>
+          <div class="cat-filter-box">
+            <input class="cat-filter-input" id="catFilterInput" type="text"
+                   autocomplete="off" spellcheck="false">
+            <button class="cat-filter-clear" id="catFilterClear" title="清除篩選">✕</button>
+          </div>
+          <span class="cat-filter-count" id="catFilterCount"></span>
         </div>
         <div class="nav-hint">
           <span><kbd>Esc</kbd> 返回</span>
@@ -921,6 +1010,7 @@ body {
         </svg></div>
         <div class="empty-text">尚未選取任何項目<br>請從左側選擇檢查或治療項目</div>
       </div>
+      <div id="warnBlock"></div>
       <div id="cartList"></div>
       <div id="discountBlock"></div>
     </div>
@@ -965,6 +1055,8 @@ body {
   </div>
   <p class="letter-contact">若您有任何問題，歡迎與我們聯繫。</p>
   <p class="letter-sign">木子澄安診所 敬上</p>
+  <!-- 價目版本：日後對帳或費用爭議時可回推當時適用的價目表 -->
+  <p class="letter-version" id="letterVersion"></p>
 </div>
 
 <!-- Tooltip -->
@@ -1538,23 +1630,63 @@ const ENDO_TREE = {
 };
 
 
+/* ═══════════════════════════════════════════════════════════════════
+   折扣金額設定區 ★ 要啟用某項優惠，把金額從 0 改成實際折扣即可
+   金額為 0 的規則不會顯示（renderCart 只收 discount > 0）。
+   ═══════════════════════════════════════════════════════════════════ */
+const DISCOUNT_AMOUNTS = {
+  'disc-endo-1':   0,   // 舒眠胃鏡＋舒眠大腸鏡同日
+  'disc-endo-2':   0,   // 一般（清醒）胃鏡＋大腸鏡同日
+  'disc-hp':       0,   // 胃鏡加做幽門桿菌快速檢測
+  'disc-drip-2':   0,   // 點滴任選 2 項以上
+  'disc-drip-3':   0,   // 點滴任選 3 項以上
+  'disc-us-2':   200,   // 超音波任選 2 項
+  'disc-us-3':   400,   // 超音波 3 項
+};
+
+/* ─ 內視鏡折扣條件用的輔助判斷 ─────────────────────────────────────
+   購物車 id 規則：L1 為鏡種本身（en_gastro、en_sp_gb…），
+   L2／L3 為「L1id|子項id」。鎮靜層結尾為 _w（清醒）／_l（輕中度）／_a（麻醉）。
+   原本的條件寫在 en1～en6 這些已不存在的舊編號上，永遠不會成立。 */
+const SED_AWAKE = /_w$/, SED_DEEP = /_(l|a)$/;
+/* 只計「分別選取」的胃鏡與大腸鏡。組合鏡（en_gc_ins／en_gc_self）的鎮靜費本身
+   已是同日合併價（例：麻醉 6,500 對比分開 4,000＋4,000），不再疊加同日折扣。 */
+function endoSubIds(c, kind){
+  const re = kind==='gastro' ? /^(en_gastro|en_sp_g)\|/ : /^(en_colon|en_sp_c)\|/;
+  return c.filter(i=>re.test(i.id)).map(i=>i.id.split('|')[1]);
+}
+function hasSedatedGastro(c){ return endoSubIds(c,'gastro').some(s=>SED_DEEP.test(s)&&/^(en_g|sp_g)/.test(s)); }
+function hasSedatedColon(c){  return endoSubIds(c,'colon').some(s=>SED_DEEP.test(s)&&/^(en_c|sp_c)/.test(s)); }
+function hasAwakeGastro(c){   return endoSubIds(c,'gastro').some(s=>SED_AWAKE.test(s)&&/^(en_g|sp_g)/.test(s)); }
+function hasAwakeColon(c){    return endoSubIds(c,'colon').some(s=>SED_AWAKE.test(s)&&/^(en_c|sp_c)/.test(s)); }
+/* 胃鏡類 L1（含組合鏡與自費胃鏡系列） */
+function hasAnyGastro(c){
+  return c.some(i=>/^(en_gastro|en_gc_ins|en_gc_self|en_sp_g)/.test(i.id));
+}
+/* 幽門桿菌：L2 加選（…|*_hp）或自費「胃鏡 + 驗幽門桿菌」套組 */
+function hasHpTest(c){
+  return c.some(i=>/_hp$/.test(i.id)||i.id==='en_sp_ghp');
+}
+/* 點滴項目 id 為 dr1～dr6 */
+function dripCount(c){ return c.filter(i=>/^dr\d+$/.test(i.id)).length; }
+
 const DISCOUNT_RULES = [
-  { id:'disc-endo-1', name:'舒眠胃＋大腸鏡同日套組', note:'同日無痛胃鏡與無痛大腸鏡', discount:0,
-    check:c=>c.some(i=>i.id==='en1')&&c.some(i=>i.id==='en3') },
-  { id:'disc-endo-2', name:'一般胃＋大腸鏡同日優惠', note:'同日一般胃鏡與一般大腸鏡', discount:0,
-    check:c=>c.some(i=>i.id==='en2')&&c.some(i=>i.id==='en4') },
-  { id:'disc-hp', name:'胃鏡加做 HP 快速檢測優惠', note:'任何胃鏡搭配幽門桿菌快速尿素酶', discount:0,
-    check:c=>(c.some(i=>i.id==='en1')||c.some(i=>i.id==='en2'))&&c.some(i=>i.id==='en6') },
-  { id:'disc-drip-2', name:'雙選點滴療程優惠', note:'任選兩項（含）以上點滴', discount:0,
-    check:c=>c.filter(i=>i.id.startsWith('dr')).length>=2 },
-  { id:'disc-drip-3', name:'三選點滴療程優惠', note:'任選三項（含）以上點滴', discount:0,
-    check:c=>c.filter(i=>i.id.startsWith('dr')).length>=3 },
+  { id:'disc-endo-1', name:'舒眠胃＋大腸鏡同日套組', note:'同日無痛胃鏡與無痛大腸鏡',
+    check:c=>hasSedatedGastro(c)&&hasSedatedColon(c) },
+  { id:'disc-endo-2', name:'一般胃＋大腸鏡同日優惠', note:'同日一般胃鏡與一般大腸鏡',
+    check:c=>hasAwakeGastro(c)&&hasAwakeColon(c) },
+  { id:'disc-hp', name:'胃鏡加做 HP 快速檢測優惠', note:'任何胃鏡搭配幽門桿菌快速尿素酶',
+    check:c=>hasAnyGastro(c)&&hasHpTest(c) },
+  { id:'disc-drip-2', name:'雙選點滴療程優惠', note:'任選兩項（含）以上點滴',
+    check:c=>dripCount(c)>=2 },
+  { id:'disc-drip-3', name:'三選點滴療程優惠', note:'任選三項（含）以上點滴',
+    check:c=>dripCount(c)>=3 },
   // 超音波複選優惠 (取最優一組，不疊加)
-  { id:'disc-us-2', name:'雙項超音波優惠', note:'複選任意2項超音波折價200', discount:200,
+  { id:'disc-us-2', name:'雙項超音波優惠', note:'複選任意2項超音波',
     check:c=>c.filter(i=>['ex1','ex2','ex3'].includes(i.id)&&i.mode!=='ins').length>=2 },
-  { id:'disc-us-3', name:'三項超音波優惠', note:'複選三項超音波折價400', discount:400,
+  { id:'disc-us-3', name:'三項超音波優惠', note:'複選三項超音波',
     check:c=>c.filter(i=>['ex1','ex2','ex3'].includes(i.id)&&i.mode!=='ins').length===3 },
-];
+].map(r=>Object.assign(r,{discount:DISCOUNT_AMOUNTS[r.id]||0}));
 
 /* ═══════════════════════════════════════════════════════════════════
    STATE
@@ -1850,6 +1982,14 @@ function navigateToItem(catId, itemId){
 
 /* ─ 自訂新增項目卡片 ─────────────────────────────────────────────── */
 var _customCount=0;
+/* 計數器每次載入歸零，若還原了含 custom_1 的清單會撞號（刪一個會刪掉兩個），
+   因此發號前先確認該 id 不在清單中。 */
+function nextCustomId(){
+  var n=_customCount, id;
+  do { id='custom_'+(++n); } while(cart.some(function(x){return x.id===id;}));
+  _customCount=n;
+  return id;
+}
 function appendCustomAddCard(grid,catLabel){
   var card=document.createElement('div');
   card.className='item-card custom-add-card';
@@ -1876,7 +2016,7 @@ function appendCustomAddCard(grid,catLabel){
       var name=nameEl.value.trim();
       if(!name){nameEl.focus();return;}
       var price=Math.max(0,parseInt(priceEl.value)||0);
-      var id='custom_'+(++_customCount);
+      var id=nextCustomId();
       cart.push({id:id,name:name,catLabel:catLabel,price:price,mode:'self',priceEdited:false});
       renderCart(); if(currentCat) buildItemsGrid(currentCat);
       showToast('✓ 已加入：'+name);
@@ -1922,6 +2062,10 @@ function openCategory(catId){
   document.getElementById('catIconEl').innerHTML=ICONS[cat.id]||'';
   document.getElementById('catTitleEl').textContent=cat.label;
   document.getElementById('catDescEl').textContent=cat.desc;
+  /* 換分類時清掉上一個分類的篩選字；內視鏡為逐層選單，不提供篩選 */
+  resetCatFilter();
+  const cf=document.getElementById('catFilter');
+  if(cf) cf.classList.toggle('hidden', cat.id==='endo');
   buildItemsGrid(cat);
   const home=document.getElementById('screen-home');
   const catScreen=document.getElementById('screen-category');
@@ -1938,24 +2082,96 @@ function goHome(){
 document.getElementById('backBtn').addEventListener('click',goHome);
 
 /* ═══════════════════════════════════════════════════════════════════
+   分類內即時篩選（檢驗有 300 多項，只靠滑動找太慢）
+   內視鏡是逐層選單，不套用篩選。
+   ═══════════════════════════════════════════════════════════════════ */
+let catFilter='';
+
+function matchesCatFilter(item){
+  if(!catFilter) return true;
+  const q=catFilter.toLowerCase();
+  return (item.name+' '+(item.desc||'')+' '+(ITEM_NOTES[item.id]||'')+' '+(ITEM_DESCS[item.id]||''))
+         .toLowerCase().includes(q);
+}
+
+function updateFilterCount(shown){
+  const el=document.getElementById('catFilterCount');
+  if(!el) return;
+  el.textContent = catFilter ? shown+' 項' : '';
+}
+
+function setCatFilter(v){
+  catFilter=v.trim();
+  const clr=document.getElementById('catFilterClear');
+  if(clr) clr.classList.toggle('visible', !!catFilter);
+  if(currentCat) buildItemsGrid(currentCat);
+  const sc=document.querySelector('.items-scroll');
+  if(sc) sc.scrollTop=0;
+}
+
+function resetCatFilter(){
+  const inp=document.getElementById('catFilterInput');
+  if(inp) inp.value='';
+  catFilter='';
+  const clr=document.getElementById('catFilterClear');
+  if(clr) clr.classList.remove('visible');
+  updateFilterCount(0);
+}
+
+(function initCatFilter(){
+  const inp=document.getElementById('catFilterInput');
+  const clr=document.getElementById('catFilterClear');
+  if(!inp) return;
+  inp.addEventListener('input',()=>setCatFilter(inp.value));
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){
+      e.stopPropagation();               /* 先清篩選，不要直接跳回選單 */
+      if(catFilter){ resetCatFilter(); if(currentCat) buildItemsGrid(currentCat); }
+      else inp.blur();
+    }
+  });
+  if(clr) clr.addEventListener('click',()=>{
+    resetCatFilter();
+    if(currentCat) buildItemsGrid(currentCat);
+    inp.focus();
+  });
+})();
+
+/* ═══════════════════════════════════════════════════════════════════
    BUILD ITEMS GRID
    ═══════════════════════════════════════════════════════════════════ */
 function buildItemsGrid(cat){
   if(cat.id==='endo'){buildEndoGrid();return;}
   const grid=document.getElementById('itemsGrid');
   grid.innerHTML='';
-  /* 點滴：第一順位 */
-  if(cat.id==='drip') appendCustomAddCard(grid,cat.label);
+
+  /* 篩選中：先算出哪些分段還有項目，空分段不顯示標題 */
+  const filtering=!!catFilter;
+  const sectionHas={};
+  if(filtering){
+    let cur=null;
+    cat.items.forEach(it=>{
+      if(it.type==='section'){ cur=it.id; if(!(cur in sectionHas)) sectionHas[cur]=false; return; }
+      if(cur&&matchesCatFilter(it)) sectionHas[cur]=true;
+    });
+  }
+  let shown=0;
+
+  /* 點滴：第一順位（篩選中不顯示自訂新增卡） */
+  if(cat.id==='drip'&&!filtering) appendCustomAddCard(grid,cat.label);
   cat.items.forEach(item=>{
     if(item.type==='section'){
+      if(filtering&&!sectionHas[item.id]) return;
       /* 檢驗：在「一般生化檢查」之前插入（= 檢驗套組最後一位） */
-      if(cat.id==='lab'&&item.id==='lb_s0') appendCustomAddCard(grid,cat.label);
+      if(cat.id==='lab'&&item.id==='lb_s0'&&!filtering) appendCustomAddCard(grid,cat.label);
       const hdr=document.createElement('div');
       hdr.className='items-section-header';
       hdr.textContent=item.name;
       grid.appendChild(hdr);
       return;
     }
+    if(filtering&&!matchesCatFilter(item)) return;
+    shown++;
     const inCart=cart.find(c=>c.id===item.id);
     const mode=inCart?inCart.mode:'self';
     const sel=!!inCart, isIns=sel&&mode==='ins';
@@ -1986,7 +2202,14 @@ function buildItemsGrid(cat){
     grid.appendChild(card);
   });
   /* 檢查及處置：其他檢查最後一位（= grid 最末） */
-  if(cat.id==='exam') appendCustomAddCard(grid,cat.label);
+  if(cat.id==='exam'&&!filtering) appendCustomAddCard(grid,cat.label);
+  if(filtering&&shown===0){
+    const e=document.createElement('div');
+    e.className='filter-empty';
+    e.innerHTML='找不到「'+esc(catFilter)+'」相關項目<br>請換個關鍵字，或清除篩選';
+    grid.appendChild(e);
+  }
+  updateFilterCount(shown);
   applyCardA11y();
 }
 
@@ -2343,13 +2566,15 @@ function buildEndoGrid(){
       +'<div class="item-price-row"><span class="price-currency">NT$</span><span class="price-val">'+fmtPrice(gcSelf.basePrice)+' 起</span></div>'
       +'<div class="endo-nav-arrow">'+(gcOpen?'▾':'›')+'</div>';
     gc.onclick=function(){
-      if(endoL1&&endoL1.id==='en_gc_self'){endoL1=null;endoL2=null;}
-      else{
-        clearSpGroup('en_gc_self');
+      if(endoL1&&endoL1.id==='en_gc_self'){
+        endoL1=null;endoL2=null;
+        renderCart();buildEndoGrid();
+        return;
+      }
+      switchSpGroup(function(){
         cart=cart.filter(function(x){return !x.id.startsWith('en_gc_self|')&&x.id!=='en_gc_self';});
         endoL1=gcSelf;endoL2=null;
-      }
-      renderCart();buildEndoGrid();
+      },'en_gc_self');
     };
     grid.appendChild(gc);
     if(gcOpen){
@@ -2399,10 +2624,11 @@ function buildEndoGrid(){
   spColon.forEach(function(sp){
     renderSpItem(grid,sp,SP_COLON_PREP,SP_COLON_SED);
   });
-  /* 病理檢查費：簡單固定價格 */
+  /* 病理檢查費：同一列累計件數（原本每件一列，列印會出現多行相同項目） */
   var pathItem=ENDO_TREE.selfPay.find(function(sp){return sp.id==='en_sp_path';});
   if(pathItem){
-    var pathCount=cart.filter(function(x){return x.id.startsWith('en_sp_path');}).length;
+    var pathRow=cart.find(function(x){return x.id===PATH_ID;});
+    var pathCount=pathRow?pathRow.qty:0;
     var pc=document.createElement('div'); pc.className='item-card sp-card'+(pathCount>0?' selected':'');
     pc.dataset.id=pathItem.id;  /* 啟用 hover 備註 */
     /* 說明文字改置於備註；件數併入名稱，維持單行高度不因加選而變動 */
@@ -2410,13 +2636,9 @@ function buildEndoGrid(){
       +'<div class="item-name">'+esc(pathItem.name)+(pathCount>0?' ×'+pathCount:'')+'</div>'
       +'<div class="item-price-row"><span class="price-currency">NT$</span><span class="price-val">'+fmtPrice(pathItem.price)+'</span></div>'
       +'<div class="check-dot">✓</div>';
-    pc.onclick=function(e){
-      e.preventDefault();
-      var uid='en_sp_path_'+Date.now();
-      cart.push({id:uid,name:pathItem.name,catLabel:'內視鏡',price:pathItem.price,mode:'self',priceEdited:false});
-      showToast('✓ 已加入：'+pathItem.name);
-      renderCart(); buildEndoGrid();
-    };
+    pc.onclick=function(e){ e.preventDefault(); changePathQty(+1); };
+    /* 右鍵減一件，不必回到清單刪除 */
+    pc.addEventListener('contextmenu',function(e){ e.preventDefault(); changePathQty(-1); });
     grid.appendChild(pc);
   }
 
@@ -2470,9 +2692,8 @@ function renderSpItem(grid,sp,l2arr,l3arr){
     +'<div class="endo-nav-arrow">'+(isOpen?'▾':'›')+'</div>';
   (function(item){sc.onclick=function(){
     if(spL1&&spL1.id===item.id){ spL1=null; buildEndoGrid(); return; }
-    clearSpGroup(item.id);
-    spL1=item;
-    buildEndoGrid();
+    /* 原本少了 renderCart()，清掉的項目仍留在右側清單上（畫面與實際不符） */
+    switchSpGroup(function(){ spL1=item; }, item.id);
   };})(sp);
   grid.appendChild(sc);
   if(isOpen){
@@ -2517,15 +2738,36 @@ function renderSpItem(grid,sp,l2arr,l3arr){
 /* 自費互斥群組：en_gc_self 同時屬於兩組（含胃鏡+大腸鏡） */
 var SP_GASTRO_GROUP=['en_sp_g','en_sp_ghp','en_sp_gb','en_sp_gp','en_gc_self'];
 var SP_COLON_GROUP=['en_sp_c','en_sp_cb','en_sp_cp1','en_sp_cp2','en_sp_cp3','en_gc_self'];
+/* 清除同互斥群組的其他選擇，並回傳被移除的項目（供提示與復原使用） */
 function clearSpGroup(l1id){
   var grps=[];
   if(SP_GASTRO_GROUP.indexOf(l1id)!==-1) grps.push(SP_GASTRO_GROUP);
   if(SP_COLON_GROUP.indexOf(l1id)!==-1) grps.push(SP_COLON_GROUP);
+  if(!grps.length) return [];
+  var ids=[];
   grps.forEach(function(grp){
-    grp.forEach(function(gid){
-      if(gid===l1id) return;
-      cart=cart.filter(function(x){return x.id!==gid&&!x.id.startsWith(gid+'|');});
-    });
+    grp.forEach(function(gid){ if(gid!==l1id&&ids.indexOf(gid)===-1) ids.push(gid); });
+  });
+  var removed=cart.filter(function(x){
+    return ids.some(function(gid){ return x.id===gid||x.id.indexOf(gid+'|')===0; });
+  });
+  if(removed.length) cart=cart.filter(function(x){ return removed.indexOf(x)===-1; });
+  return removed;
+}
+
+/* 切換自費鏡種時，把被清掉的選擇講清楚並提供復原
+   （原本是靜默清除，已配置好的鏡種／代餐／鎮靜會無聲消失） */
+function switchSpGroup(applyFn, l1id){
+  var snap={cart:cart.slice(), spL1:spL1, endoL1:endoL1, endoL2:endoL2};
+  var removed=clearSpGroup(l1id);
+  applyFn();
+  renderCart(); buildEndoGrid();
+  if(!removed.length) return;
+  showToast('已清除原本的 '+removed.length+' 項選擇', '復原', function(){
+    cart=snap.cart; spL1=snap.spL1; endoL1=snap.endoL1; endoL2=snap.endoL2;
+    _prevCartIds=cart.map(function(c){return c.id;});
+    renderCart(); buildEndoGrid();
+    showToast('已復原原本的選擇');
   });
 }
 
@@ -2621,6 +2863,37 @@ function toggleSpL3(spItem,l3obj){
    TOGGLE ITEM
    ═══════════════════════════════════════════════════════════════════ */
 /* 健檢 A-E 互斥群組（同時只能選一項） */
+/* ═══════════════════════════════════════════════════════════════════
+   病理檢查費：以件數累計於同一列
+   原本每按一次就新增一列（id 帶時間戳），列印時會出現多行相同項目。
+   ═══════════════════════════════════════════════════════════════════ */
+const PATH_ID='en_sp_path';
+function changePathQty(delta){
+  const def=ENDO_TREE.selfPay.find(s=>s.id===PATH_ID);
+  if(!def) return;
+  const idx=cart.findIndex(x=>x.id===PATH_ID);
+  if(idx===-1){
+    if(delta<=0) return;
+    cart.push({id:PATH_ID,name:def.name,catLabel:'內視鏡',
+               qty:1,unitPrice:def.price,price:def.price,mode:'self',priceEdited:false});
+    showToast('✓ 已加入：'+def.name);
+  } else {
+    const it=cart[idx];
+    const q=(it.qty||1)+delta;
+    if(q<=0){
+      cart.splice(idx,1);
+      showToast('已移除：'+def.name);
+    } else {
+      it.qty=q;
+      /* 件數變動後重算金額，原本的手動改價會被覆蓋 */
+      it.price=(it.unitPrice||def.price)*q;
+      it.priceEdited=false;
+      showToast(def.name+' ×'+q);
+    }
+  }
+  renderCart(); buildEndoGrid();
+}
+
 const HC_RADIO = new Set(['hc1','hc2','hc3','hc4','hc5']);
 
 function toggleItem(item, clickMode){
@@ -2643,7 +2916,47 @@ function toggleItem(item, clickMode){
   }
   if(['ex1','ex2','ex3'].includes(item.id)){dismissedDiscounts.delete('disc-us-2');dismissedDiscounts.delete('disc-us-3');}
   renderCart();
-  if(currentCat) buildItemsGrid(currentCat);
+  /* 健檢套組互斥會同時影響同群組的卡片，一併更新 */
+  const touched = HC_RADIO.has(item.id) ? Array.from(HC_RADIO) : [item.id];
+  if(!refreshCards(touched) && currentCat) buildItemsGrid(currentCat);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   局部更新卡片狀態
+   原本每點一下就重建整個分類（檢驗 300 多張卡），既慢又會讓鍵盤焦點消失。
+   找不到對應卡片時回傳 false，由呼叫端退回完整重建。
+   ═══════════════════════════════════════════════════════════════════ */
+function applyCardState(card, item){
+  const inCart=cart.find(c=>c.id===item.id);
+  const sel=!!inCart, isIns=sel&&inCart.mode==='ins';
+  /* 保留 nm-flow 等排版用的 class 不受影響（那些在子元素上） */
+  card.className='item-card'+(isIns?' ins-mode':sel?' selected':'');
+  const badge=card.querySelector('.mode-badge');
+  if(badge){
+    badge.className='mode-badge '+(isIns?'ins':'self');
+    badge.textContent=isIns?'免自費':'自費';
+  }
+  const priceRow=card.querySelector('.item-price-row');
+  if(priceRow){
+    if(isIns) priceRow.innerHTML='<span class="price-val ins-price">免自費</span>';
+    else if(item.price>0) priceRow.innerHTML='<span class="price-currency">NT$</span><span class="price-val">'+fmtPrice(item.price)+'</span>';
+    else priceRow.innerHTML='<span class="price-val tbd">待建檔</span>';
+  }
+}
+
+function refreshCards(ids){
+  if(!currentCat||currentCat.id==='endo') return false;
+  const grid=document.getElementById('itemsGrid');
+  if(!grid) return false;
+  const pairs=[];
+  for(const id of ids){
+    const item=currentCat.items.find(i=>i.id===id&&!i.type);
+    const card=grid.querySelector('.item-card[data-id="'+cssEsc(id)+'"]');
+    if(!item||!card) return false;
+    pairs.push([card,item]);
+  }
+  pairs.forEach(([card,item])=>applyCardState(card,item));
+  return true;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -2652,6 +2965,8 @@ function toggleItem(item, clickMode){
 function startEditPrice(el, itemId){
   const item=cart.find(c=>c.id===itemId);
   if(!item||item.mode==='ins') return;
+  /* 第一次改價時記住定價，供「還原定價」使用（會一併寫入保存狀態） */
+  if(item._origPrice===undefined) item._origPrice=item.price;
 
   const input=document.createElement('input');
   input.type='number'; input.className='price-edit-input';
@@ -2670,6 +2985,18 @@ function startEditPrice(el, itemId){
     if(e.key==='Enter'){ e.preventDefault(); save(); }
     if(e.key==='Escape') renderCart();
   });
+}
+
+/* 還原為定價（改過價格的項目才會顯示此鍵） */
+function revertPrice(itemId){
+  const item=cart.find(c=>c.id===itemId);
+  if(!item||item._origPrice===undefined) return;
+  item.price=item._origPrice;
+  item.priceEdited=false;
+  delete item._origPrice;
+  showToast('已還原定價：'+item.name);
+  renderCart();
+  if(currentCat) buildItemsGrid(currentCat);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -2716,9 +3043,13 @@ function renderCart(){
         const isTbd=item.price===0&&!isEndoItem;
         const cls='cart-item-price'+(item.priceEdited?' edited':'')+(isTbd?' tbd':'');
         const label=item.price>0?`NT$ ${fmtPrice(item.price)}`:isTbd?'待建檔':'NT$ 0';
+        /* 改過價格的項目給一個還原鍵，不必整筆刪掉重加 */
+        const hint=item.priceEdited
+          ? `<button class="price-revert-btn" data-id="${item.id}" title="還原定價">↺ 還原定價</button>`
+          : `<span class="price-edit-hint">點擊修改金額</span>`;
         priceEl=`
           <span class="${cls}" data-id="${item.id}">${label}</span>
-          <span class="price-edit-hint">點擊修改金額</span>`;
+          ${hint}`;
       }
 
       // Notes block for print
@@ -2730,12 +3061,22 @@ function renderCart(){
         : '';
 
       const catDisplay=item.catLabel==='內視鏡'&&item.id.includes('|')?'耗材及鎮靜/麻醉':item.catLabel;
+      /* 以件數計價的項目（病理檢查費）：名稱帶 ×N，並提供加減鍵 */
+      const qtyLabel = item.qty ? ` ×${item.qty}` : '';
+      const qtyCtrl = (item.qty && item.mode!=='ins')
+        ? `<span class="qty-ctrl">
+             <button class="qty-btn" data-qty="-1" title="減一件">−</button>
+             <span class="qty-num">${item.qty}</span>
+             <button class="qty-btn" data-qty="1" title="加一件">＋</button>
+           </span>`
+        : '';
       row.innerHTML=`
         <div class="cart-item-body">
-          <div class="cart-item-name">${esc(item.name).replace(/\n/g,' ')}</div>
+          <div class="cart-item-name">${esc(item.name).replace(/\n/g,' ')}${qtyLabel}</div>
           <div class="cart-item-meta">
             <span class="cart-badge ${item.mode==='ins'?'ins':'self'}">${item.mode==='ins'?'免自費':'自費'}</span>
             <span class="cart-item-cat">${esc(catDisplay)}</span>
+            ${qtyCtrl}
           </div>
           ${notesBlock}
         </div>
@@ -2746,6 +3087,16 @@ function renderCart(){
       // Bind editable price
       const priceSpan=row.querySelector('.cart-item-price:not(.ins-p)');
       if(priceSpan) priceSpan.addEventListener('click',()=>startEditPrice(priceSpan,item.id));
+
+      // 還原定價
+      const revertBtn=row.querySelector('.price-revert-btn');
+      if(revertBtn) revertBtn.addEventListener('click',e=>{e.stopPropagation();revertPrice(item.id);});
+
+      // 件數加減
+      row.querySelectorAll('.qty-btn').forEach(b=>b.addEventListener('click',e=>{
+        e.stopPropagation();
+        if(item.id===PATH_ID) changePathQty(parseInt(e.currentTarget.dataset.qty,10));
+      }));
 
       row.querySelector('.cart-remove-btn').addEventListener('click',e=>removeItem(e.currentTarget.dataset.id));
       // 右鍵切換自費/健保
@@ -2798,15 +3149,38 @@ function renderCart(){
   var ddEl=document.getElementById('discountDisplay');
   if(ddEl&&ddEl.tagName==='SPAN') ddEl.textContent=displayDiscount>0?`— NT$ ${fmtPrice(displayDiscount)}`:'— NT$ 0';
   document.getElementById('grandTotal').textContent=allTbd?'待建檔':fmtPrice(grand);
-  bindPaidDisplay(); bindDiscountDisplay();
+  /* 已付金額只負責顯示，編輯由 .panel-foot 的委派處理 */
+  var pdEl=document.getElementById('paidDisplay');
+  if(pdEl&&pdEl.tagName==='SPAN') pdEl.textContent='— NT$ '+fmtPrice(paidAmount);
   (function(){
     var hasEndo=cart.some(function(c){return c.catLabel==='內視鏡';});
     var hasHcDE=cart.some(function(c){return c.id==='hc4'||c.id==='hc5';});
     var noteEl=document.getElementById('endoNote');
     if(noteEl) noteEl.classList.toggle('active',hasEndo||hasHcDE);
   })();
+  renderConflictWarning();
   flagNewCartRows(cartList);
   saveState();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   重複計費提示（僅供櫃檯確認，不列印）
+   健檢 D／E 方案內容已含麻醉腸胃鏡，若又在內視鏡區另加自費項目會重複收費。
+   ═══════════════════════════════════════════════════════════════════ */
+const HC_WITH_ENDO = { hc4:'D 方案', hc5:'E 方案' };
+function renderConflictWarning(){
+  const box=document.getElementById('warnBlock');
+  if(!box) return;
+  box.innerHTML='';
+  const hcItem=cart.find(c=>HC_WITH_ENDO[c.id]);
+  const endoSelf=cart.filter(c=>c.catLabel==='內視鏡'&&c.mode!=='ins'&&(c.price||0)>0);
+  if(!hcItem||!endoSelf.length) return;
+  const div=document.createElement('div');
+  div.className='warn-block';
+  div.innerHTML='<div class="warn-title">請確認是否重複計費</div>'
+    +'<div class="warn-text">'+esc(HC_WITH_ENDO[hcItem.id])
+    +'已包含麻醉腸胃鏡，清單中另有 '+endoSelf.length+' 項內視鏡自費費用。</div>';
+  box.appendChild(div);
 }
 
 /* 新加入的項目：捲入可視範圍並短暫標示（長清單時才看得出加了什麼） */
@@ -2839,10 +3213,12 @@ function removeItem(id){
   cart=cart.filter(c=>c.id!==id);
   showToast(`已移除：${item.name}`, '復原', ()=>{
     cart=snapshot; _prevCartIds=cart.map(c=>c.id);
-    renderCart(); if(currentCat) buildItemsGrid(currentCat);
+    renderCart();
+    if(!refreshCards([id]) && currentCat) buildItemsGrid(currentCat);
     showToast(`已復原：${item.name}`);
   });
-  renderCart(); if(currentCat) buildItemsGrid(currentCat);
+  renderCart();
+  if(!refreshCards([id]) && currentCat) buildItemsGrid(currentCat);
 }
 
 document.getElementById('btnClear').addEventListener('click',()=>{
@@ -2866,11 +3242,27 @@ document.getElementById('btnClear').addEventListener('click',()=>{
   });
 });
 
-/* 列印前先確認清單不是空的 */
+/* 列印前先確認清單不是空的，並讓檔名帶上日期 */
 document.getElementById('btnPrint').addEventListener('click',()=>{
   if(!cart.length){ showToast('清單是空的，請先選取項目'); return; }
+  const pi=document.getElementById('patientNameInput');
+  document.title=printFileTitle(pi?pi.value.trim():'');
   window.print();
 });
+
+/* ═══════════════════════════════════════════════════════════════════
+   最後改版日期
+   ★ 每次改版請一併更新這個日期，會顯示於首頁左下角與列印版頁尾
+   ═══════════════════════════════════════════════════════════════════ */
+const APP_REVISION = '2026-09-11';
+
+function renderAppRevision(){
+  const el = document.getElementById('appRevision');
+  if(el) el.textContent = '最後改版：' + APP_REVISION;
+  const lv = document.getElementById('letterVersion');
+  if(lv) lv.textContent = '價目版本：' + APP_REVISION;
+}
+renderAppRevision();
 
 /* ═══════════════════════════════════════════════════════════════════
    BANNER DATE
@@ -2881,8 +3273,20 @@ function updateDate(){
     n.toLocaleDateString('zh-TW',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
 }
 updateDate();
+/* 診間電腦常整天不關機，列印前重算日期，避免印出前一天的日期 */
+window.addEventListener('beforeprint', updateDate);
+/* 每十分鐘校正一次，跨日時畫面上的日期也會跟著換 */
+setInterval(updateDate, 600000);
 
 /* 稱謂同步 + 列印檔名 */
+function printFileTitle(name){
+  const n = new Date();
+  const ymd = n.getFullYear()
+    + String(n.getMonth()+1).padStart(2,'0')
+    + String(n.getDate()).padStart(2,'0');
+  /* 未輸入稱謂時也要有合理檔名，不要用系統標題當 PDF 檔名 */
+  return (name ? name + ' ' : '') + '醫療費用說明_' + ymd;
+}
 (function(){
   var pi=document.getElementById('patientNameInput');
   var ln=document.getElementById('letterPatientName');
@@ -2890,7 +3294,7 @@ updateDate();
   pi.addEventListener('input',function(){
     var name=pi.value.trim();
     ln.textContent=name||'___';
-    document.title=(name?name:'')+'醫療費用說明';
+    document.title=printFileTitle(name);
   });
 })();
 
@@ -2900,32 +3304,46 @@ window.addEventListener('resize', function(){
     positionSearchResults();
 });
 
-/* 已付金額 & 優惠折扣（可手動編輯） */
+/* ═══════════════════════════════════════════════════════════════════
+   已付金額 & 優惠折扣（可手動編輯）
+   以事件委派處理：原本每次 renderCart 都對同一個 span 再 addEventListener
+   一次且從未移除，監聽器會不斷累積，點一次會觸發 N 個處理器並搶走焦點。
+   ═══════════════════════════════════════════════════════════════════ */
 var paidAmount=0;
 
-function bindEditableAmount(elId,getter,setter){
-  var el=document.getElementById(elId);
-  if(!el||el.tagName!=='SPAN') return;
-  el.addEventListener('click',function(){
-    var input=document.createElement('input');
-    input.type='number'; input.min='0'; input.className='price-edit-input';
-    input.style.color='var(--gold)'; input.value=getter()||'';
-    el.replaceWith(input); input.focus(); input.select();
-    function save(){
-      setter(Math.max(0,parseInt(input.value)||0));
-      var span=document.createElement('span');
-      span.id=elId; span.className=el.className;
-      span.textContent='— NT$ '+fmtPrice(getter());
-      input.replaceWith(span);
-      bindEditableAmount(elId,getter,setter); renderCart();
-    }
-    input.addEventListener('blur',save);
-    input.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key==='Escape')save();});
+const EDITABLE_AMOUNTS = {
+  paidDisplay:     { get:()=>paidAmount,                set:v=>{paidAmount=v;} },
+  discountDisplay: { get:()=>manualDiscountOverride||0,  set:v=>{manualDiscountOverride=v;} }
+};
+
+function startEditAmount(el, cfg){
+  const elId=el.id, cls=el.className;
+  const input=document.createElement('input');
+  input.type='number'; input.min='0'; input.className='price-edit-input';
+  input.style.color='var(--gold)'; input.value=cfg.get()||'';
+  el.replaceWith(input); input.focus(); input.select();
+  let done=false;
+  function save(){
+    if(done) return; done=true;            /* blur 與 keydown 可能同時觸發 */
+    cfg.set(Math.max(0,parseInt(input.value)||0));
+    const span=document.createElement('span');
+    span.id=elId; span.className=cls;
+    span.textContent='— NT$ '+fmtPrice(cfg.get());
+    input.replaceWith(span);
+    renderCart();
+  }
+  input.addEventListener('blur',save);
+  input.addEventListener('keydown',function(e){
+    if(e.key==='Enter'||e.key==='Escape'){ e.preventDefault(); save(); }
   });
 }
 
-function bindPaidDisplay(){ bindEditableAmount('paidDisplay',()=>paidAmount,v=>{paidAmount=v;}); }
-function bindDiscountDisplay(){ bindEditableAmount('discountDisplay',()=>manualDiscountOverride||0,v=>{manualDiscountOverride=v;}); }
+document.querySelector('.panel-foot').addEventListener('click',function(e){
+  const el=e.target.closest('.paid-display, .discount-display');
+  if(!el||el.tagName!=='SPAN') return;
+  const cfg=EDITABLE_AMOUNTS[el.id];
+  if(cfg) startEditAmount(el,cfg);
+});
 
 /* X 取消優惠 */
 document.getElementById('discountBlock').addEventListener('click',function(e){
@@ -2934,9 +3352,6 @@ document.getElementById('discountBlock').addEventListener('click',function(e){
   dismissedDiscounts.add(btn.dataset.discId);
   renderCart();
 });
-
-bindPaidDisplay();
-bindDiscountDisplay();
 
 /* ═══════════════════════════════════════════════════════════════════
    狀態保存（避免誤關視窗／重新整理時整份清單消失）
