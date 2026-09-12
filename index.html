@@ -126,11 +126,17 @@ body {
 #screen-home::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 #home-inner {
   position: relative;
+  /* .screen 是 column flex 容器，預設會把本區塊壓縮到容器高度，
+     導致內容溢出卻無法捲動（矮視窗時選單會壓到左下角的改版日期）。 */
+  flex: 0 0 auto;
   min-height: 100%; width: 100%;
   display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: clamp(18px, 3.6vh, 40px);
-  padding: clamp(24px, 5vh, 60px) 32px clamp(44px, 6vh, 64px);
+  align-items: center;
+  /* 內容自上方排起並略微下移：完全置中會讓 banner 下方留下過大的空白，
+     完全貼齊上緣又會頭重腳輕，取中間的偏上配置。 */
+  justify-content: flex-start;
+  /* 下方至少留 56px，讓左下角的改版日期不會被選單壓到 */
+  padding: clamp(28px, 10vh, 110px) 32px clamp(56px, 8vh, 96px);
 }
 /* 最後改版日期：固定於首頁左下角。脫離 flex 流排，不影響主內容置中 */
 .app-revision {
@@ -140,19 +146,21 @@ body {
   letter-spacing: 0.02em; pointer-events: none;
 }
 
-.home-hero { width: 100%; max-width: 780px; text-align: center; }
+/* 區塊節奏：標題→搜尋較近，搜尋→選單較遠，層級才讀得出來 */
+.home-hero { width: 100%; max-width: 780px; text-align: center; margin-bottom: clamp(22px, 3.5vh, 38px); }
 .home-hero-eyebrow {
   font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--accent); margin-bottom: 12px; font-weight: 500;
+  color: var(--accent); margin-bottom: 10px; font-weight: 500;
 }
 .home-hero-title {
   font-size: clamp(30px, 3.4vw, 44px); font-weight: 300; color: var(--text);
-  letter-spacing: 0.05em; line-height: 1.15;
+  letter-spacing: 0.05em; line-height: 1.2;
 }
-.home-hero-title strong { font-weight: 700; color: var(--primary); display: block; }
+/* 同一行呈現「訂製您的個人醫療」，以字重區分前後段 */
+.home-hero-title strong { font-weight: 700; color: var(--primary); }
 
 /* Search bar */
-.search-wrap { width: 100%; max-width: 560px; }
+.search-wrap { width: 100%; max-width: 560px; margin-bottom: clamp(32px, 6vh, 64px); }
 .search-box  { position: relative; }
 .field-label {
   display: block; font-size: 12.5px; color: var(--muted);
@@ -258,6 +266,23 @@ body {
 .cat-card:hover .cat-icon { transform: scale(1.07); background: #E1EDF2; color: var(--accent); }
 .cat-label       { font-size: clamp(16px, 1.5vw, 20px); font-weight: 600; color: var(--text); letter-spacing: 0.04em; }
 .cat-count-badge { font-size: 13px; color: var(--muted); background: var(--bg); padding: 2px 10px; border-radius: 12px; border: 1px solid var(--border); }
+
+/* 螢幕越高，整組內容往下帶越多並放寬區塊間距，
+   否則內容只佔上方會頭重腳輕（分兩段，避免單一斷點在筆電尺寸失衡） */
+@media screen and (min-height: 860px) {
+  #home-inner  { padding-top: 13vh; }
+  .home-hero   { margin-bottom: 38px; }
+  .search-wrap { margin-bottom: 64px; }
+}
+@media screen and (min-height: 1000px) {
+  #home-inner  { padding-top: 17vh; }
+  .home-hero   { margin-bottom: 42px; }
+  .search-wrap { margin-bottom: 72px; }
+}
+/* 矮螢幕：收緊上方留白，讓五個選單在不捲動的情況下放得進去 */
+@media screen and (max-height: 700px) {
+  #home-inner { padding-top: clamp(20px, 5vh, 40px); }
+}
 
 /* ─── Category Screen ────────────────────────────────────────────── */
 #screen-category { padding: 20px 28px 28px; overflow: hidden; }
@@ -717,6 +742,10 @@ body {
   }
   .panel-body { max-height: 46vh; }
   #screen-category { padding: 16px 18px 22px; }
+  /* 直式／窄視窗時內容區已被壓縮，上方留白跟著收緊 */
+  #home-inner  { padding-top: clamp(24px, 4vh, 48px); }
+  .home-hero   { margin-bottom: clamp(20px, 2.6vh, 28px); }
+  .search-wrap { margin-bottom: clamp(28px, 4vh, 44px); }
 }
 
 /* ─── Print ──────────────────────────────────────────────────────── */
@@ -3254,7 +3283,7 @@ document.getElementById('btnPrint').addEventListener('click',()=>{
    最後改版日期
    ★ 每次改版請一併更新這個日期，會顯示於首頁左下角與列印版頁尾
    ═══════════════════════════════════════════════════════════════════ */
-const APP_REVISION = '2026-09-11';
+const APP_REVISION = '2026-09-12';
 
 function renderAppRevision(){
   const el = document.getElementById('appRevision');
