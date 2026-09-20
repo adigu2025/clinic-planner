@@ -148,13 +148,15 @@ body {
 
 /* 區塊節奏：標題→搜尋較近，搜尋→選單較遠，層級才讀得出來 */
 .home-hero { width: 100%; max-width: 780px; text-align: center; margin-bottom: clamp(22px, 3.5vh, 38px); }
+/* 全大寫拉丁字需要較寬字距才好讀；行高放寬讓它與標題分得開 */
 .home-hero-eyebrow {
-  font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--accent); margin-bottom: 10px; font-weight: 500;
+  font-size: 13px; letter-spacing: 0.22em; text-transform: uppercase;
+  line-height: 1.5; color: var(--accent); margin-bottom: 12px; font-weight: 500;
 }
+/* 中文大字：字距 0.06em、行高 1.3，字面不會擠在一起也不會鬆散 */
 .home-hero-title {
   font-size: clamp(30px, 3.4vw, 44px); font-weight: 300; color: var(--text);
-  letter-spacing: 0.05em; line-height: 1.2;
+  letter-spacing: 0.06em; line-height: 1.3;
 }
 /* 同一行呈現「訂製您的個人醫療」，以字重區分前後段 */
 .home-hero-title strong { font-weight: 700; color: var(--primary); }
@@ -164,7 +166,7 @@ body {
 .search-box  { position: relative; }
 .field-label {
   display: block; font-size: 12.5px; color: var(--muted);
-  letter-spacing: 0.06em; margin: 0 0 7px 20px;
+  letter-spacing: 0.08em; line-height: 1.5; margin: 0 0 8px 20px;
 }
 .field-label kbd {
   font-family: inherit; font-size: 11px; background: var(--surface);
@@ -264,8 +266,26 @@ body {
 }
 .cat-icon svg { width: 36px; height: 36px; }
 .cat-card:hover .cat-icon { transform: scale(1.07); background: #E1EDF2; color: var(--accent); }
-.cat-label       { font-size: clamp(16px, 1.5vw, 20px); font-weight: 600; color: var(--text); letter-spacing: 0.04em; }
-.cat-count-badge { font-size: 13px; color: var(--muted); background: var(--bg); padding: 2px 10px; border-radius: 12px; border: 1px solid var(--border); }
+/* 選單文字：字距略放寬、行高 1.45，中文字面才不會黏在一起 */
+.cat-label       { font-size: clamp(16px, 1.5vw, 20px); font-weight: 600; color: var(--text); letter-spacing: 0.06em; line-height: 1.45; }
+.cat-count-badge { font-size: 13px; line-height: 1.7; color: var(--muted); background: var(--bg); padding: 2px 10px; border-radius: 12px; border: 1px solid var(--border); letter-spacing: 0.04em; }
+
+/* ─── 隱藏功能區（首頁按 X 顯示）──────────────────────────────── */
+.cat-extra {
+  width: 100%; max-width: 900px;
+  display: none; margin-top: clamp(14px, 1.8vh, 22px);
+}
+.cat-extra.show { display: block; animation: extraIn 0.28s var(--ease); }
+@keyframes extraIn { from { opacity:0; transform: translateY(-8px); } to { opacity:1; transform:none; } }
+.cat-extra-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: clamp(10px, 1.4vw, 18px); width: 100%;
+}
+/* 與五大選單同寬，但只放兩張時不該被拉成整列寬 */
+.cat-extra-grid .cat-card { max-width: 260px; width: 100%; justify-self: center; }
+.cat-extra .cat-icon { background: var(--gold-pale); border-color: var(--gold-line); color: var(--gold-deep); }
+.cat-extra .cat-card:hover { border-color: var(--gold); }
+.cat-extra .cat-card:hover .cat-icon { background: #F7EAD3; color: var(--gold); }
 
 /* 螢幕越高，整組內容往下帶越多並放寬區塊間距，
    否則內容只佔上方會頭重腳輕（分兩段，避免單一斷點在筆電尺寸失衡） */
@@ -687,6 +707,78 @@ body {
   letter-spacing: 0.04em; margin: 0 0 3px 2px;
 }
 
+/* ═══ 文件檢視器（說明文件／同意書）════════════════════════════════
+   整頁顯示、標籤置於右側、＋／－ 縮放、方向鍵換項目。
+   兩頁式文件並列顯示，縮放時兩頁同步。 */
+#screen-doc { padding: 20px 28px 22px; overflow: hidden; }
+.doc-shell { flex: 1; display: flex; gap: 12px; min-height: 0; }
+.doc-stage { flex: 1; min-width: 0; position: relative; }
+.doc-toolbar {
+  position: absolute; top: 10px; left: 12px; right: 12px; z-index: 3;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; pointer-events: none;
+}
+.doc-topic {
+  font-size: 15px; font-weight: 700; color: var(--primary);
+  background: rgba(255,255,255,0.9); border: 1px solid var(--border);
+  padding: 5px 12px; border-radius: 8px; letter-spacing: 0.04em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 46%;
+}
+.doc-tools {
+  display: flex; align-items: center; gap: 5px; flex-shrink: 0; pointer-events: auto;
+  background: rgba(255,255,255,0.9); border: 1px solid var(--border);
+  padding: 4px 6px; border-radius: 10px;
+}
+.doc-btn {
+  border: 1.4px solid var(--border); background: var(--surface); color: var(--primary);
+  height: 30px; min-width: 32px; padding: 0 10px; border-radius: 7px; cursor: pointer;
+  font-family: inherit; font-size: 14px; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s;
+}
+.doc-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-pale); }
+.doc-zoom-val { min-width: 84px; text-align: center; font-size: 13px; color: var(--muted); letter-spacing: 0.02em; }
+.doc-canvas {
+  height: 100%; overflow: auto; background: #EBEFF1; position: relative;
+  border: 1px solid var(--border); border-radius: 12px; padding: 10px;
+  display: flex; align-items: flex-start; justify-content: center; gap: 12px;
+}
+.doc-canvas img {
+  display: block; border-radius: 6px; background: #FFF;
+  box-shadow: 0 2px 12px rgba(21,40,49,0.16); flex-shrink: 0;
+}
+.doc-canvas img[data-loading] { opacity: 0; }
+.doc-loading {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: var(--muted); font-size: 14px; pointer-events: none;
+}
+.doc-rail {
+  width: 176px; flex-shrink: 0; overflow-y: auto; overscroll-behavior: contain;
+  display: flex; flex-direction: column; gap: 5px; padding-right: 3px;
+}
+.doc-rail::-webkit-scrollbar { width: 4px; }
+.doc-rail::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.doc-tab {
+  padding: 10px 12px; border-radius: 9px; font-size: 14px; line-height: 1.45;
+  letter-spacing: 0.04em; cursor: pointer; background: var(--bg); color: var(--muted);
+  border: 1px solid transparent; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.doc-tab:hover { background: var(--accent-pale); color: var(--accent); }
+.doc-tab.current { background: var(--accent); color: #FFF; font-weight: 700; }
+.doc-tab-pages { font-size: 11.5px; opacity: 0.8; flex-shrink: 0; }
+
+/* 最大化：隱藏 banner 與費用清單，檢視區佔滿整個視窗 */
+body.doc-max .banner { display: none; }
+body.doc-max .pricing-panel { display: none; }
+body.doc-max #screen-doc { padding: 10px 14px; }
+body.doc-max #screen-doc .screen-nav { display: none; }
+
+@media screen and (max-width: 860px) {
+  .doc-shell { flex-direction: column; }
+  .doc-canvas { height: 62vh; }
+  .doc-rail { width: auto; flex-direction: row; flex-wrap: wrap; overflow: visible; }
+}
+
 /* ─── 分類內即時篩選 ───────────────────────────────────────────── */
 .cat-filter { display: flex; align-items: center; gap: 7px; margin-left: 18px; flex-shrink: 0; }
 .cat-filter.hidden { display: none; }
@@ -963,6 +1055,11 @@ body {
           <div class="cat-grid" id="catGrid"></div>
         </div>
 
+        <!-- 隱藏功能區：首頁按 X 顯示／再按一次收起 -->
+        <div class="cat-extra" id="catExtra">
+          <div class="cat-extra-grid" id="catExtraGrid"></div>
+        </div>
+
         <!-- 最後改版日期（左下角灰色小字） -->
         <div class="app-revision" id="appRevision"></div>
 
@@ -996,6 +1093,42 @@ body {
       </div>
       <div class="items-scroll">
         <div class="items-grid" id="itemsGrid"></div>
+      </div>
+    </div>
+
+    <!-- Document Screen（說明文件／同意書）-->
+    <div class="screen" id="screen-doc">
+      <div class="screen-nav">
+        <button class="back-btn" id="docBackBtn"><span class="back-arrow">‹</span> 返回選單</button>
+        <div class="screen-heading">
+          <span class="screen-cat-icon" id="docIconEl"></span>
+          <div>
+            <div class="screen-title" id="docTitleEl"></div>
+            <div class="screen-desc"  id="docDescEl"></div>
+          </div>
+        </div>
+        <div class="nav-hint">
+          <span><kbd>←</kbd><kbd>→</kbd> 換項目</span>
+          <span><kbd>+</kbd><kbd>-</kbd> 縮放</span>
+          <span><kbd>F</kbd> 最大化</span>
+          <span><kbd>Esc</kbd> 返回</span>
+        </div>
+      </div>
+      <div class="doc-shell">
+        <div class="doc-stage">
+          <div class="doc-toolbar">
+            <div class="doc-topic" id="docTopic"></div>
+            <div class="doc-tools">
+              <button class="doc-btn" id="docZoomOut" title="縮小（按 - 鍵）">−</button>
+              <span class="doc-zoom-val" id="docZoomVal"></span>
+              <button class="doc-btn" id="docZoomIn" title="放大（按 + 鍵）">＋</button>
+              <button class="doc-btn" id="docFitBtn" title="整頁顯示（按 0 鍵）">整頁</button>
+              <button class="doc-btn" id="docMaxBtn" title="最大化（按 F 鍵）">最大化</button>
+            </div>
+          </div>
+          <div class="doc-canvas" id="docCanvas"></div>
+        </div>
+        <div class="doc-rail" id="docRail"></div>
       </div>
     </div>
 
@@ -2105,6 +2238,9 @@ function openCategory(catId){
 
 function goHome(){
   document.getElementById('screen-category').classList.remove('active');
+  document.getElementById('screen-doc').classList.remove('active');
+  document.body.classList.remove('doc-max');
+  currentDoc=null;
   document.getElementById('screen-home').classList.add('active');
   currentCat=null;
 }
@@ -3474,7 +3610,7 @@ function isTypingTarget(el){
 }
 
 function focusSearch(){
-  if(currentCat) goHome();
+  if(currentCat||currentDoc) goHome();
   setTimeout(function(){
     const el = document.getElementById('searchInput');
     if(el){ el.focus(); el.select(); }
@@ -3540,8 +3676,243 @@ document.addEventListener('scroll', function(){
     positionSearchResults();
 }, true);
 
+/* ═══════════════════════════════════════════════════════════════════
+   說明文件／同意書檢視器
+   首頁按 X 顯示入口。圖片為 repo 內的獨立 .jpg，隨選載入並預抓鄰頁，
+   主程式不內嵌圖檔，容量與載入速度不受影響。
+   ═══════════════════════════════════════════════════════════════════ */
+const DOC_ICONS = {
+  docs: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M14 2.5H7.5A2 2 0 0 0 5.5 4.5v15a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V7z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M14 2.5V7h4.5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M9 12h6M9 15.5h6M9 8.5h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+  </svg>`,
+  consent: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M13.5 2.5H7A2 2 0 0 0 5 4.5v15a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M8.5 7.5h4M8.5 11h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M8.5 16.5c1.6-2.2 3-2.2 4.2 0 1-2.6 2.4-3.4 4.3-2.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M20.5 3.5l-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+  </svg>`
+};
+
+const DOC_SETS = [
+  { id:'docs', label:'說明文件', desc:'診間說明與費用明細',
+    items:[
+      { label:'腸胃鏡費用明細', pages:['img/doc-endoscopy-fee.jpg'] },
+      { label:'檢測幽門桿菌',   pages:['img/doc-hp-test.jpg'] }
+    ]
+  },
+  { id:'consent', label:'同意書', desc:'檢查與治療同意書',
+    items:[
+      { label:'胃鏡',       pages:['img/consent-gastroscopy-1.jpg','img/consent-gastroscopy-2.jpg'] },
+      { label:'大腸鏡',     pages:['img/consent-colonoscopy-1.jpg','img/consent-colonoscopy-2.jpg'] },
+      { label:'膠囊內視鏡', pages:['img/consent-capsule-1.jpg','img/consent-capsule-2.jpg'] },
+      { label:'輕中度鎮靜', pages:['img/consent-sedation-1.jpg','img/consent-sedation-2.jpg'] },
+      { label:'冷凝刀',     pages:['img/consent-het-1.jpg','img/consent-het-2.jpg'] },
+      { label:'甲狀腺穿刺', pages:['img/consent-thyroid-fna-1.jpg'] }
+    ]
+  }
+];
+
+let currentDoc = null;      /* 目前開啟的文件組 */
+let docIdx = 0;             /* 目前項目索引 */
+let docZoom = 'fit';        /* 'fit' 或倍率數值，換項目時沿用 */
+const DOC_ZOOM_STEPS = [0.3,0.4,0.5,0.6,0.75,0.9,1,1.25,1.5,2,2.5,3];
+const DOC_GAP = 12;         /* 兩頁並列的間距，需與 .doc-canvas 的 gap 一致 */
+
+/* 首頁隱藏入口 */
+function buildExtraCards(){
+  const grid=document.getElementById('catExtraGrid');
+  if(!grid) return;
+  grid.innerHTML='';
+  DOC_SETS.forEach(set=>{
+    const card=document.createElement('div');
+    card.className='cat-card';
+    card.innerHTML=`
+      <div class="cat-icon">${DOC_ICONS[set.id]}</div>
+      <div class="cat-label">${esc(set.label)}</div>
+      <div class="cat-count-badge">${set.items.length} 份</div>`;
+    card.addEventListener('click',()=>openDocSet(set.id));
+    grid.appendChild(card);
+  });
+}
+
+function toggleExtraCards(force){
+  const box=document.getElementById('catExtra');
+  if(!box) return;
+  const show = (force===undefined) ? !box.classList.contains('show') : !!force;
+  box.classList.toggle('show', show);
+  if(show){ applyCardA11y(); showToast('已顯示：說明文件、同意書'); }
+}
+
+function openDocSet(id){
+  const set=DOC_SETS.find(s=>s.id===id);
+  if(!set) return;
+  currentDoc=set; docIdx=0; docZoom='fit';
+  document.getElementById('docIconEl').innerHTML=DOC_ICONS[set.id]||'';
+  document.getElementById('docTitleEl').textContent=set.label;
+  document.getElementById('docDescEl').textContent=set.desc;
+  const home=document.getElementById('screen-home');
+  const docScreen=document.getElementById('screen-doc');
+  home.classList.remove('active'); home.classList.add('exit');
+  setTimeout(()=>home.classList.remove('exit'),320);
+  docScreen.classList.add('active');
+  renderDocViewer(); renderDocRail();
+}
+
+function renderDocViewer(){
+  const box=document.getElementById('docCanvas');
+  if(!box||!currentDoc) return;
+  const item=currentDoc.items[docIdx];
+  if(!item){ box.innerHTML=''; return; }
+  document.getElementById('docTopic').textContent=
+    item.label + (item.pages.length>1 ? `（共 ${item.pages.length} 頁）` : '');
+  box.innerHTML = item.pages.map((src,i)=>
+      `<img src="${src}" alt="${esc(item.label)} 第 ${i+1} 頁" data-loading="1">`
+    ).join('') + `<div class="doc-loading">載入中…</div>`;
+  const imgs=[...box.querySelectorAll('img')];
+  let left=imgs.length;
+  const done=()=>{
+    if(--left>0) return;
+    imgs.forEach(im=>im.removeAttribute('data-loading'));
+    const tip=box.querySelector('.doc-loading'); if(tip) tip.remove();
+    applyDocZoom();
+  };
+  imgs.forEach(im=>{
+    if(im.complete && im.naturalWidth) done();
+    else{
+      im.addEventListener('load',done,{once:true});
+      im.addEventListener('error',()=>{
+        const tip=box.querySelector('.doc-loading');
+        if(tip) tip.textContent='圖片載入失敗，請確認 img 資料夾與 index.html 放在一起';
+        done();
+      },{once:true});
+    }
+  });
+  preloadDocNeighbours();
+}
+
+/* 兩頁並列時，fit 需把間距一併算進可用寬度，兩頁才會同時完整顯示 */
+function applyDocZoom(){
+  const box=document.getElementById('docCanvas');
+  if(!box) return;
+  const imgs=[...box.querySelectorAll('img')].filter(im=>im.naturalWidth);
+  if(!imgs.length) return;
+  const label=document.getElementById('docZoomVal');
+  const sumW=imgs.reduce((s,im)=>s+im.naturalWidth,0);
+  const maxH=Math.max(...imgs.map(im=>im.naturalHeight));
+  let scale;
+  if(docZoom==='fit'){
+    const availW=box.clientWidth-20-DOC_GAP*(imgs.length-1);
+    const availH=box.clientHeight-20;
+    scale=Math.min(availW/sumW, availH/maxH);
+    if(label) label.textContent='整頁 '+Math.round(scale*100)+'%';
+  } else {
+    scale=docZoom;
+    if(label) label.textContent=Math.round(scale*100)+'%';
+  }
+  imgs.forEach(im=>{
+    im.style.width=Math.max(80,Math.floor(im.naturalWidth*scale))+'px';
+    im.style.height='auto'; im.style.maxWidth='none';
+  });
+}
+
+function docCurrentScale(){
+  const box=document.getElementById('docCanvas');
+  const im=box&&box.querySelector('img');
+  if(!im||!im.naturalWidth) return 1;
+  return im.getBoundingClientRect().width/im.naturalWidth;
+}
+function docZoomStep(dir){
+  const cur=(docZoom==='fit')?docCurrentScale():docZoom;
+  let next;
+  if(dir>0) next=DOC_ZOOM_STEPS.find(z=>z>cur+0.01);
+  else next=[...DOC_ZOOM_STEPS].reverse().find(z=>z<cur-0.01);
+  if(next===undefined) return;
+  docZoom=next; applyDocZoom();
+}
+function docFit(){ docZoom='fit'; applyDocZoom(); }
+
+/* 頁面內最大化：不使用瀏覽器全螢幕 API，避免跳出系統提示列 */
+function docToggleMax(){
+  const on=document.body.classList.toggle('doc-max');
+  const btn=document.getElementById('docMaxBtn');
+  if(btn){ btn.textContent = on?'還原':'最大化'; btn.title = on?'結束最大化（按 F 或 Esc 鍵）':'最大化（按 F 鍵）'; }
+  setTimeout(applyDocZoom,0);
+}
+
+function renderDocRail(){
+  const rail=document.getElementById('docRail');
+  if(!rail||!currentDoc) return;
+  rail.innerHTML='';
+  currentDoc.items.forEach((it,i)=>{
+    const tab=document.createElement('div');
+    tab.className='doc-tab'+(i===docIdx?' current':'');
+    tab.innerHTML=`<span>${esc(it.label)}</span><span class="doc-tab-pages">${it.pages.length} 頁</span>`;
+    tab.onclick=()=>selectDocItem(i);
+    rail.appendChild(tab);
+  });
+  const cur=rail.querySelector('.doc-tab.current');
+  if(cur&&cur.scrollIntoView) cur.scrollIntoView({block:'nearest'});
+}
+
+function selectDocItem(i){
+  if(!currentDoc) return;
+  docIdx=i;
+  renderDocViewer(); renderDocRail();
+  const box=document.getElementById('docCanvas');
+  if(box){ box.scrollTop=0; box.scrollLeft=0; }
+}
+
+const docPreloaded=new Set();
+function preloadDocNeighbours(){
+  if(!currentDoc) return;
+  const n=currentDoc.items.length;
+  [(docIdx+1)%n,(docIdx-1+n)%n].forEach(i=>{
+    (currentDoc.items[i].pages||[]).forEach(src=>{
+      if(docPreloaded.has(src)) return;
+      docPreloaded.add(src);
+      const im=new Image(); im.src=src;
+    });
+  });
+}
+
+document.getElementById('docBackBtn').addEventListener('click',goHome);
+document.getElementById('docZoomIn').addEventListener('click',()=>docZoomStep(1));
+document.getElementById('docZoomOut').addEventListener('click',()=>docZoomStep(-1));
+document.getElementById('docFitBtn').addEventListener('click',docFit);
+document.getElementById('docMaxBtn').addEventListener('click',docToggleMax);
+window.addEventListener('resize',()=>{ if(currentDoc) applyDocZoom(); });
+
+/* 文件檢視器鍵盤操作 */
+document.addEventListener('keydown',function(e){
+  if(!currentDoc||isTypingTarget(e.target)) return;
+  const n=currentDoc.items.length;
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp'){ e.preventDefault(); selectDocItem((docIdx-1+n)%n); }
+  else if(e.key==='ArrowRight'||e.key==='ArrowDown'){ e.preventDefault(); selectDocItem((docIdx+1)%n); }
+  else if(e.key==='+'||e.key==='='){ e.preventDefault(); docZoomStep(1); }
+  else if(e.key==='-'||e.key==='_'){ e.preventDefault(); docZoomStep(-1); }
+  else if(e.key==='0'){ e.preventDefault(); docFit(); }
+  else if(e.key==='f'||e.key==='F'){ e.preventDefault(); docToggleMax(); }
+  else if(e.key==='Escape'){
+    e.preventDefault();
+    if(document.body.classList.contains('doc-max')) docToggleMax();
+    else goHome();
+  }
+});
+
+/* 首頁按 X（不分大小寫）顯示／收起隱藏功能區 */
+document.addEventListener('keydown',function(e){
+  if(e.key!=='x'&&e.key!=='X') return;
+  if(e.ctrlKey||e.metaKey||e.altKey) return;
+  if(isTypingTarget(e.target)) return;
+  if(currentCat||currentDoc) return;          /* 僅限主畫面 */
+  e.preventDefault();
+  toggleExtraCards();
+});
+
 /* Init */
-buildHome(); renderCart(); applyCardA11y();
+buildHome(); buildExtraCards(); renderCart(); applyCardA11y();
 _initDone = true;
 </script>
 </body>
