@@ -137,16 +137,19 @@ body {
   /* 內容自上方排起並略微下移：完全置中會讓 banner 下方留下過大的空白，
      完全貼齊上緣又會頭重腳輕，取中間的偏上配置。 */
   justify-content: flex-start;
-  /* 下方至少留 56px，讓左下角的改版日期不會被選單壓到 */
-  padding: clamp(28px, 10vh, 110px) 32px clamp(56px, 8vh, 96px);
+  /* 改版日期已改貼 .content，這裡只需留一般底部留白 */
+  padding: clamp(28px, 10vh, 110px) 32px clamp(40px, 6vh, 72px);
 }
-/* 最後改版日期：固定於首頁左下角。脫離 flex 流排，不影響主內容置中 */
+/* 最後改版日期：貼在 .content 底部（高度固定），不隨首頁內容增減而浮動。
+   僅在主畫面顯示，用相鄰選擇器判斷，不需額外 JS。 */
 .app-revision {
-  position: absolute; left: 32px; bottom: 14px;
+  display: none;
+  position: absolute; left: 32px; bottom: 14px; z-index: 2;
   text-align: left; font-size: 12.5px;
   color: var(--muted); opacity: .75;
   letter-spacing: 0.02em; pointer-events: none;
 }
+#screen-home.active ~ .app-revision { display: block; }
 
 /* 區塊節奏：標題→搜尋較近，搜尋→選單較遠，層級才讀得出來 */
 .home-hero { width: 100%; max-width: 780px; text-align: center; margin-bottom: clamp(22px, 3.5vh, 38px); }
@@ -279,12 +282,25 @@ body {
 }
 .cat-extra.show { display: block; animation: extraIn 0.28s var(--ease); }
 @keyframes extraIn { from { opacity:0; transform: translateY(-8px); } to { opacity:1; transform:none; } }
+/* 橫向緊湊卡片：高度約 68px（直式為 174px），
+   展開後總高度才不會撐出捲軸 */
 .cat-extra-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
-  gap: clamp(10px, 1.4vw, 18px); width: 100%;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(10px, 1.4vw, 18px);
+  width: 100%; max-width: 580px; margin: 0 auto;
 }
-/* 與五大選單同寬，但只放兩張時不該被拉成整列寬 */
-.cat-extra-grid .cat-card { max-width: 260px; width: 100%; justify-self: center; }
+.cat-extra-grid .cat-card {
+  flex-direction: row; align-items: center; justify-content: flex-start;
+  gap: 12px; padding: 11px 14px; text-align: left; max-width: none;
+}
+.cat-extra .cat-icon { width: 44px; height: 44px; border-radius: 13px; flex-shrink: 0; }
+.cat-extra .cat-icon svg { width: 24px; height: 24px; }
+.cat-extra .cat-label { font-size: 16px; line-height: 1.4; }
+.cat-extra .cat-count-badge { margin-left: auto; flex-shrink: 0; }
+/* 窄螢幕兩欄會把卡片壓到換行（高度變成 114px），改為單欄維持一列高 */
+@media screen and (max-width: 560px) {
+  .cat-extra-grid { grid-template-columns: 1fr; }
+}
 .cat-extra .cat-icon { background: var(--gold-pale); border-color: var(--gold-line); color: var(--gold-deep); }
 .cat-extra .cat-card:hover { border-color: var(--gold); }
 .cat-extra .cat-card:hover .cat-icon { background: #F7EAD3; color: var(--gold); }
@@ -1063,9 +1079,6 @@ body.doc-max #screen-doc .screen-nav { display: none; }
           <div class="cat-extra-grid" id="catExtraGrid"></div>
         </div>
 
-        <!-- 最後改版日期（左下角灰色小字） -->
-        <div class="app-revision" id="appRevision"></div>
-
       </div>
     </div>
 
@@ -1134,6 +1147,10 @@ body.doc-max #screen-doc .screen-nav { display: none; }
         <div class="doc-rail" id="docRail"></div>
       </div>
     </div>
+
+    <!-- 最後改版日期：貼在 content 底部而非 #home-inner，
+         內容高度改變（例如展開隱藏功能區）時位置完全不動 -->
+    <div class="app-revision" id="appRevision"></div>
 
   </div><!-- /content -->
 
