@@ -768,6 +768,8 @@ body {
   box-shadow: 0 2px 12px rgba(21,40,49,0.16); flex-shrink: 0;
 }
 .doc-canvas img[data-loading] { opacity: 0; }
+/* 程式性收回焦點用，不顯示焦點框 */
+.doc-canvas:focus { outline: none; box-shadow: none; }
 .doc-loading {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   color: var(--muted); font-size: 14px; pointer-events: none;
@@ -1166,7 +1168,8 @@ body.doc-max #screen-doc .screen-nav { display: none; }
                 </svg>列印</button>
             </div>
           </div>
-          <div class="doc-canvas" id="docCanvas"></div>
+          <!-- tabindex 讓列印結束後可用程式把焦點收回這裡，不進 Tab 順序 -->
+          <div class="doc-canvas" id="docCanvas" tabindex="-1"></div>
         </div>
         <div class="doc-rail" id="docRail"></div>
       </div>
@@ -4017,19 +4020,39 @@ function printDocPages(srcs, title, landscape){
 
   const originalTitle=document.title;
   let done=false;
+
+  /* win.focus() 會把焦點移進隱藏 iframe，之後鍵盤事件只送到 iframe 的
+     document，父文件的方向鍵／快捷鍵就全部失效。列印結束後必須把焦點交回。 */
+  const restoreFocus=()=>{
+    try{
+      window.focus();
+      const cv=document.getElementById('docCanvas');
+      if(currentDoc && cv) cv.focus({preventScroll:true});
+      else if(document.body && document.body.focus) document.body.focus({preventScroll:true});
+    }catch(e){}
+  };
+
   const cleanup=()=>{
     if(done) return; done=true;
     if(document.title===title) document.title=originalTitle;
     window.removeEventListener('afterprint',cleanup);
-    setTimeout(()=>{ if(frame.parentNode) frame.parentNode.removeChild(frame); },800);
+    try{ win.removeEventListener('afterprint',cleanup); }catch(e){}
+    setTimeout(()=>{
+      if(frame.parentNode) frame.parentNode.removeChild(frame);
+      restoreFocus();
+    },800);
   };
   const run=()=>{
     try{
       document.title=title;          /* 另存 PDF 的預設檔名 */
+      /* afterprint 不保證在父視窗觸發，iframe 的 window 才是實際列印者，
+         兩邊都掛才不會讓 iframe 滯留到 120 秒逾時 */
       window.addEventListener('afterprint',cleanup);
+      try{ win.addEventListener('afterprint',cleanup); }catch(e){}
       win.focus(); win.print();
+      restoreFocus();                /* print() 為同步阻塞，對話框關閉後立即收回焦點 */
       setTimeout(cleanup,120000);
-    }catch(err){ cleanup(); showToast('列印失敗：'+err.message); }
+    }catch(err){ cleanup(); restoreFocus(); showToast('列印失敗：'+err.message); }
   };
   /* 等圖片載完再列印，否則會印出空白頁 */
   const pending=[...doc.images].filter(im=>!im.complete)
