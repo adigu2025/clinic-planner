@@ -755,6 +755,8 @@ body {
   display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s;
 }
 .doc-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-pale); }
+.doc-btn-print { gap: 5px; }
+.doc-btn-print svg { width: 15px; height: 15px; }
 .doc-zoom-val { min-width: 84px; text-align: center; font-size: 13px; color: var(--muted); letter-spacing: 0.02em; }
 .doc-canvas {
   height: 100%; overflow: auto; scrollbar-gutter: stable; background: #EBEFF1; position: relative;
@@ -1156,6 +1158,12 @@ body.doc-max #screen-doc .screen-nav { display: none; }
               <button class="doc-btn" id="docZoomIn" title="放大（按 + 鍵）">＋</button>
               <button class="doc-btn" id="docFitBtn" title="整頁顯示（按 0 鍵）">整頁</button>
               <button class="doc-btn" id="docMaxBtn" title="最大化（按 F 鍵）">最大化</button>
+              <button class="doc-btn doc-btn-print" id="docPrintBtn" title="列印（也可在圖片上按右鍵選擇頁數）">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M7 9V3.5h10V9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M7 18H5a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                  <rect x="7" y="14" width="10" height="6.5" rx="1" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                </svg>列印</button>
             </div>
           </div>
           <div class="doc-canvas" id="docCanvas"></div>
@@ -3665,14 +3673,46 @@ document.addEventListener('keydown', function(e){
   }
 });
 
-/* 卡片支援鍵盤操作（Enter／空白鍵＝點選） */
+/* 卡片支援鍵盤操作（Enter／空白鍵＝點選，方向鍵移動）
+   採 roving tabindex：每個卡片區只留一個 Tab 停駐點。
+   否則檢驗有 288 張卡，要按 288 次 Tab 才能離開卡片區到右側清單。 */
+const CARD_BOXES = '#catGrid, #catExtraGrid, #itemsGrid';
 function applyCardA11y(){
   document.querySelectorAll('.cat-card, .item-card').forEach(function(el){
-    if(el.hasAttribute('tabindex')) return;
-    el.setAttribute('tabindex', '0');
-    el.setAttribute('role', 'button');
+    if(!el.hasAttribute('role')) el.setAttribute('role','button');
+    el.setAttribute('tabindex','-1');
+  });
+  document.querySelectorAll(CARD_BOXES).forEach(function(box){
+    const first = box.querySelector('.cat-card, .item-card');
+    if(first) first.setAttribute('tabindex','0');
   });
 }
+
+/* 方向鍵在卡片區內移動焦點（僅在焦點已落在卡片上時作用，
+   不會干擾一般瀏覽或文件檢視器的方向鍵） */
+document.addEventListener('keydown', function(e){
+  if(currentDoc) return;
+  if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight'&&e.key!=='ArrowUp'&&e.key!=='ArrowDown') return;
+  const cur=document.activeElement;
+  if(!cur||!cur.matches||!cur.matches('.cat-card, .item-card')) return;
+  const box=cur.closest(CARD_BOXES);
+  if(!box) return;
+  const cards=[...box.querySelectorAll('.cat-card, .item-card')];
+  const i=cards.indexOf(cur);
+  if(i<0) return;
+  const cols=Math.max(1,getComputedStyle(box).gridTemplateColumns.split(' ').filter(Boolean).length);
+  let j=i;
+  if(e.key==='ArrowRight') j=i+1;
+  else if(e.key==='ArrowLeft') j=i-1;
+  else if(e.key==='ArrowDown') j=i+cols;
+  else j=i-cols;
+  if(j<0||j>=cards.length) return;
+  e.preventDefault();
+  cards.forEach(c=>c.setAttribute('tabindex','-1'));
+  cards[j].setAttribute('tabindex','0');
+  cards[j].focus();
+  cards[j].scrollIntoView({block:'nearest'});
+});
 document.addEventListener('keydown', function(e){
   if(e.key !== 'Enter' && e.key !== ' ') return;
   const card = e.target.closest && e.target.closest('.cat-card, .item-card');
@@ -3803,8 +3843,10 @@ function renderDocViewer(){
   if(!item){ box.innerHTML=''; return; }
   document.getElementById('docTopic').textContent=
     item.label + (item.pages.length>1 ? `（共 ${item.pages.length} 頁）` : '');
+  /* 顯示中的圖片優先取得，並讓解碼在主執行緒外進行 */
   box.innerHTML = item.pages.map((src,i)=>
-      `<img src="${src}" alt="${esc(item.label)} 第 ${i+1} 頁" data-loading="1">`
+      `<img src="${src}" alt="${esc(item.label)} 第 ${i+1} 頁" data-loading="1"`
+      + ` decoding="async" fetchpriority="high">`
     ).join('') + `<div class="doc-loading">載入中…</div>`;
   const imgs=[...box.querySelectorAll('img')];
   let left=imgs.length;
@@ -3813,6 +3855,8 @@ function renderDocViewer(){
     imgs.forEach(im=>im.removeAttribute('data-loading'));
     const tip=box.querySelector('.doc-loading'); if(tip) tip.remove();
     applyDocZoom();
+    /* 目前這一份顯示完成後才預抓下一份，不與它搶頻寬 */
+    preloadDocNeighbours();
   };
   imgs.forEach(im=>{
     if(im.complete && im.naturalWidth) done();
@@ -3825,7 +3869,6 @@ function renderDocViewer(){
       },{once:true});
     }
   });
-  preloadDocNeighbours();
 }
 
 /* 兩頁並列時，fit 需把間距一併算進可用寬度，兩頁才會同時完整顯示 */
@@ -3900,17 +3943,44 @@ function selectDocItem(i){
   if(box){ box.scrollTop=0; box.scrollLeft=0; }
 }
 
+/* 預抓鄰近項目：改為「顯示完成 → 瀏覽器閒置 → 一張一張抓」，
+   且標記低優先度。原本是切換項目時立刻同時抓前後兩份，
+   一次湧入約 1 MB，會拖慢正在看的那一頁。 */
 const docPreloaded=new Set();
+let _docPreloadTimer=null;
+/* 帶 timeout：瀏覽器若一直不閒置（或分頁在背景被節流），
+   仍保證在時限內執行，預抓不會永遠不發生 */
+const _idle = window.requestIdleCallback
+  ? (cb)=>window.requestIdleCallback(cb,{timeout:1200})
+  : (cb)=>setTimeout(cb,200);
+
 function preloadDocNeighbours(){
   if(!currentDoc) return;
+  clearTimeout(_docPreloadTimer);
+  /* 省流量或 2G 時不預抓 */
+  const c=navigator.connection;
+  if(c && (c.saveData || /(^|-)2g$/.test(c.effectiveType||''))) return;
   const n=currentDoc.items.length;
+  if(n<2) return;
+  const queue=[];
   [(docIdx+1)%n,(docIdx-1+n)%n].forEach(i=>{
     (currentDoc.items[i].pages||[]).forEach(src=>{
-      if(docPreloaded.has(src)) return;
-      docPreloaded.add(src);
-      const im=new Image(); im.src=src;
+      if(!docPreloaded.has(src) && queue.indexOf(src)===-1) queue.push(src);
     });
   });
+  if(!queue.length) return;
+  const step=()=>{
+    if(!currentDoc) return;              /* 已離開檢視器就停止 */
+    const src=queue.shift();
+    if(!src) return;
+    docPreloaded.add(src);
+    const im=new Image();
+    if('fetchPriority' in im) im.fetchPriority='low';
+    im.decoding='async';
+    im.onload=im.onerror=()=>_idle(step);
+    im.src=src;
+  };
+  _docPreloadTimer=setTimeout(()=>_idle(step),300);
 }
 
 /* ─── 右鍵列印 ──────────────────────────────────────────────────────
@@ -4024,6 +4094,7 @@ document.getElementById('docZoomIn').addEventListener('click',()=>docZoomStep(1)
 document.getElementById('docZoomOut').addEventListener('click',()=>docZoomStep(-1));
 document.getElementById('docFitBtn').addEventListener('click',docFit);
 document.getElementById('docMaxBtn').addEventListener('click',docToggleMax);
+document.getElementById('docPrintBtn').addEventListener('click',()=>printDocItem());
 window.addEventListener('resize',()=>{ if(currentDoc) applyDocZoom(); });
 
 /* 文件檢視器鍵盤操作 */
