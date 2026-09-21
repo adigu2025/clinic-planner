@@ -786,6 +786,21 @@ body {
 .doc-tab.current { background: var(--accent); color: #FFF; font-weight: 700; }
 .doc-tab-pages { font-size: 11.5px; opacity: 0.8; flex-shrink: 0; }
 
+/* 右鍵選單 */
+.doc-ctx-menu {
+  position: fixed; z-index: 10000; min-width: 178px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; box-shadow: var(--shadow-lg); padding: 6px;
+}
+.doc-ctx-item {
+  display: block; width: 100%; padding: 9px 13px; border: none; background: none;
+  text-align: left; cursor: pointer; font-family: inherit; font-size: 14.5px;
+  color: var(--text); border-radius: 7px; white-space: nowrap; letter-spacing: 0.02em;
+}
+.doc-ctx-item:hover { background: var(--accent-pale); color: var(--accent); }
+.doc-ctx-sep { height: 1px; background: var(--border); margin: 5px 8px; }
+.doc-canvas img { cursor: context-menu; }
+
 /* 最大化：隱藏 banner 與費用清單，檢視區佔滿整個視窗 */
 body.doc-max .banner { display: none; }
 body.doc-max .pricing-panel { display: none; }
@@ -1127,6 +1142,7 @@ body.doc-max #screen-doc .screen-nav { display: none; }
           <span><kbd>←</kbd><kbd>→</kbd> 換項目</span>
           <span><kbd>+</kbd><kbd>-</kbd> 縮放</span>
           <span><kbd>F</kbd> 最大化</span>
+          <span>右鍵列印</span>
           <span><kbd>Esc</kbd> 返回</span>
         </div>
       </div>
@@ -3897,6 +3913,112 @@ function preloadDocNeighbours(){
   });
 }
 
+/* ─── 右鍵列印 ──────────────────────────────────────────────────────
+   以隱藏 iframe 列印，只跳出列印對話框、不另開分頁。
+   每一頁各自成為一張 A4，兩頁式同意書會印成兩張，不並列。
+   ─────────────────────────────────────────────────────────────────── */
+function printDocPages(srcs, title, landscape){
+  const list = Array.isArray(srcs) ? srcs : [srcs];
+  const body = list.map(src =>
+    `<div class="pp"><img src="${esc(src)}" alt=""></div>`).join('');
+  const pageW = landscape ? '297mm' : '210mm';
+  const pageH = landscape ? '210mm' : '297mm';
+
+  const frame=document.createElement('iframe');
+  frame.setAttribute('aria-hidden','true');
+  frame.style.cssText='position:fixed;left:-10000px;top:0;width:900px;height:1200px;border:0;opacity:0;';
+  document.body.appendChild(frame);
+
+  const win=frame.contentWindow, doc=win.document;
+  doc.open();
+  doc.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+esc(title)+'</title>'
+    /* 圖片是外部檔案，需要 base 才能解析 img/ 相對路徑 */
+    +'<base href="'+location.href+'">'
+    +'<style>'
+    +'html,body{margin:0;padding:0;background:#fff;}'
+    +'@page{margin:0;size:A4 '+(landscape?'landscape':'portrait')+';}'
+    +'.pp{width:'+pageW+';height:'+pageH+';overflow:hidden;'
+    +'display:flex;align-items:center;justify-content:center;'
+    +'page-break-after:always;break-after:page;}'
+    +'.pp:last-child{page-break-after:auto;break-after:auto;}'
+    +'.pp img{max-width:100%;max-height:100%;display:block;}'
+    +'</style></head><body>'+body+'</body></html>');
+  doc.close();
+
+  const originalTitle=document.title;
+  let done=false;
+  const cleanup=()=>{
+    if(done) return; done=true;
+    if(document.title===title) document.title=originalTitle;
+    window.removeEventListener('afterprint',cleanup);
+    setTimeout(()=>{ if(frame.parentNode) frame.parentNode.removeChild(frame); },800);
+  };
+  const run=()=>{
+    try{
+      document.title=title;          /* 另存 PDF 的預設檔名 */
+      window.addEventListener('afterprint',cleanup);
+      win.focus(); win.print();
+      setTimeout(cleanup,120000);
+    }catch(err){ cleanup(); showToast('列印失敗：'+err.message); }
+  };
+  /* 等圖片載完再列印，否則會印出空白頁 */
+  const pending=[...doc.images].filter(im=>!im.complete)
+    .map(im=>new Promise(r=>{ im.onload=im.onerror=r; }));
+  Promise.all(pending).then(()=>setTimeout(run,80));
+}
+
+/* 依目前顯示的圖片判斷紙張方向（說明文件為橫式，同意書為直式） */
+function docIsLandscape(){
+  const imgs=[...document.querySelectorAll('#docCanvas img')].filter(i=>i.naturalWidth);
+  return imgs.length ? imgs.every(i=>i.naturalWidth>i.naturalHeight) : false;
+}
+function printDocItem(pageIdx){
+  if(!currentDoc) return;
+  const item=currentDoc.items[docIdx];
+  if(!item) return;
+  const landscape=docIsLandscape();
+  if(pageIdx===undefined){
+    printDocPages(item.pages, currentDoc.label+'_'+item.label, landscape);
+  } else {
+    printDocPages([item.pages[pageIdx]],
+      currentDoc.label+'_'+item.label+'_第'+(pageIdx+1)+'頁', landscape);
+  }
+}
+
+function closeDocMenu(){
+  const old=document.getElementById('docCtxMenu');
+  if(old) old.remove();
+}
+function showDocMenu(e){
+  if(!currentDoc) return;
+  const item=currentDoc.items[docIdx];
+  if(!item) return;
+  e.preventDefault();
+  closeDocMenu();
+  const menu=document.createElement('div');
+  menu.id='docCtxMenu'; menu.className='doc-ctx-menu';
+  const add=(label,fn)=>{
+    const b=document.createElement('button');
+    b.type='button'; b.className='doc-ctx-item'; b.textContent=label;
+    b.onclick=()=>{ closeDocMenu(); fn(); };
+    menu.appendChild(b);
+  };
+  const n=item.pages.length;
+  add(n>1 ? `列印這一份（${n} 頁）` : '列印這一份', ()=>printDocItem());
+  if(n>1){
+    const sep=document.createElement('div'); sep.className='doc-ctx-sep'; menu.appendChild(sep);
+    item.pages.forEach((_,i)=>add('只印第 '+(i+1)+' 頁', ()=>printDocItem(i)));
+  }
+  document.body.appendChild(menu);
+  const r=menu.getBoundingClientRect();
+  menu.style.left=Math.max(8,Math.min(e.clientX, window.innerWidth  - r.width  - 8))+'px';
+  menu.style.top =Math.max(8,Math.min(e.clientY, window.innerHeight - r.height - 8))+'px';
+}
+document.getElementById('docCanvas').addEventListener('contextmenu',showDocMenu);
+document.addEventListener('click',closeDocMenu);
+document.addEventListener('scroll',closeDocMenu,true);
+window.addEventListener('resize',closeDocMenu);
+
 document.getElementById('docBackBtn').addEventListener('click',goHome);
 document.getElementById('docZoomIn').addEventListener('click',()=>docZoomStep(1));
 document.getElementById('docZoomOut').addEventListener('click',()=>docZoomStep(-1));
@@ -3916,7 +4038,9 @@ document.addEventListener('keydown',function(e){
   else if(e.key==='f'||e.key==='F'){ e.preventDefault(); docToggleMax(); }
   else if(e.key==='Escape'){
     e.preventDefault();
-    if(document.body.classList.contains('doc-max')) docToggleMax();
+    /* 右鍵選單開著時，Esc 先關選單，不要直接離開 */
+    if(document.getElementById('docCtxMenu')) closeDocMenu();
+    else if(document.body.classList.contains('doc-max')) docToggleMax();
     else goHome();
   }
 });
