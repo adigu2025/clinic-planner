@@ -353,7 +353,6 @@ body {
   color: var(--primary); border-bottom: 2px solid rgba(var(--accent-rgb),0.3);
 }
 .items-section-header:first-child { margin-top: 0; }
-.items-section-header.combo-section { color: var(--accent); }
 
 /* Item Card */
 .item-card {
@@ -652,22 +651,6 @@ body {
 
 
 /* ─── Endo Tree Navigation ───────────────────────────────── */
-.endo-breadcrumb-bar {
-  grid-column: 1 / -1; display: flex; align-items: center; gap: 10px;
-  padding: 8px 4px 10px; margin-bottom: 4px;
-  border-bottom: 2px solid rgba(var(--accent-rgb),0.3);
-  flex-wrap: wrap;
-}
-.endo-back-btn {
-  display: flex; align-items: center; gap: 5px;
-  padding: 5px 14px 5px 10px; flex-shrink: 0;
-  background: var(--surface); border: 1.5px solid var(--border); border-radius: 16px;
-  cursor: pointer; font-size: 14px; color: var(--muted); font-family: inherit;
-  transition: all 0.18s var(--ease);
-}
-.endo-back-btn:hover { background: var(--accent-pale); border-color: var(--accent); color: var(--accent); }
-.endo-crumbs { font-size: 13px; color: var(--muted); line-height: 1.5; flex: 1; }
-.endo-crumb-name { color: var(--accent); font-weight: 600; }
 .item-card.endo-nav { border-color: var(--accent-light); }
 .item-card.endo-nav .mode-badge { background: rgba(var(--accent-rgb),0.1); color: var(--accent); }
 .endo-nav-arrow { font-size: 22px; color: var(--accent); font-weight: 200; line-height: 1; }
@@ -704,11 +687,6 @@ body {
 .endo-sub-row.l3 .item-card.selected .check-dot { background: var(--gold) !important; }
 
 
-.endo-path-bar {
-  grid-column: 1 / -1; font-size: 13px; font-weight: 600; color: var(--accent);
-  padding: 4px 0 8px; letter-spacing: 0.04em;
-  border-bottom: 2px solid rgba(var(--accent-rgb),0.2); margin-bottom: 8px;
-}
 .endo-sub-row {
   grid-column: 1 / -1; background: var(--accent-pale);
   border-radius: var(--radius-sm); padding: 10px 10px 8px; margin-bottom: 2px;
@@ -718,7 +696,6 @@ body {
   display: grid; grid-template-columns: repeat(auto-fill,minmax(170px,1fr)); gap: 8px;
 }
 
-.endo-base-note { font-size: 12px; color: var(--muted); margin-top: 3px; word-break: keep-all; overflow-wrap: break-word; }
 
 /* ─── 自訂項目欄位標籤（依規範不使用 placeholder） ────────────────── */
 .custom-add-label {
@@ -881,17 +858,6 @@ body.doc-max #screen-doc .screen-nav { display: none; }
 /* ─── Print ──────────────────────────────────────────────────────── */
 @page { margin: 0; size: A4; }
 
-.cart-note-input {
-  width: 100%; border: none; border-bottom: 1px dashed var(--border);
-  background: transparent; font-family: inherit; font-size: 12px; color: var(--muted);
-  resize: none; padding: 3px 2px; margin-top: 5px; outline: none; line-height: 1.5;
-  transition: border-color 0.15s;
-}
-.cart-note-input:focus { border-bottom-color: var(--accent); }
-.cart-note-input::placeholder { color: var(--border); font-size: 11.5px; }
-
-.cart-custom-note-print { display: none; }
-
 .cart-notes-print { display: none; }
 
 @media print {
@@ -918,7 +884,6 @@ body.doc-max #screen-doc .screen-nav { display: none; }
   .banner-name  { color: #152831 !important; }
   .banner-sub   { color: #64757F !important; }
   .banner-date  { position: absolute !important; right: 20px !important; color: #64757F !important; }
-  .bd-time      { display: none !important; }
 
   /* 說明信件 */
   .letter-part {
@@ -942,7 +907,7 @@ body.doc-max #screen-doc .screen-nav { display: none; }
   }
 
   /* 隱藏互動元素 */
-  .content, .action-row, .interaction-hint, .toast,
+  .content, .action-row, .toast,
   .search-wrap, .search-results, .back-btn, .panel-legend, .nav-hint, .restore-bar,
   .app-revision, .cat-filter, .warn-block,
   .tooltip-popup { display: none !important; }
@@ -1032,12 +997,6 @@ body.doc-max #screen-doc .screen-nav { display: none; }
     font-size: 10.5px !important; color: #64748B !important; line-height: 1.65 !important;
   }
   .cart-notes-print-title { display: none !important; }
-  .cart-note-input { display: none !important; }
-  .cart-custom-note-print {
-    display: inline !important;
-    font-size: 11px !important; color: #475569 !important;
-    margin-left: 6px !important;
-  }
   #endoNote { display: none !important; }
   #endoNote.active { display: block !important; }
 }
@@ -1403,6 +1362,7 @@ const ITEM_DESCS = {
   'en_sp_cp1':  '不含病理檢查',
   'en_sp_cp2':  '不含病理檢查',
   'en_sp_cp3':  '不含病理檢查',
+  'lb_20007':   '報告時效 7-10 工作天',
 };
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1681,6 +1641,7 @@ const CATEGORIES = [
       { id:'lb_20004', name:'HLA-B1502 抗癲癇藥物過敏基因', price:4000 },
       { id:'lb_20005', name:'HLA-B27 僵直性脊椎炎', price:2000 },
       { id:'lb_20006', name:'肥胖基因檢測', price:5500 },
+      { id:'lb_20007', name:'ACTN3 genotype', price:1500 },
       { id:'lb_s20', type:'section', name:'性病檢查' },
       { id:'lb_21001', name:'VDRL (STS/RPR) 梅毒', price:100 },
       { id:'lb_21002', name:'TPHA 梅毒螺旋體', price:300 },
@@ -3245,6 +3206,8 @@ function renderCart(){
     items.forEach(item=>{
       const row=document.createElement('div'); row.className='cart-item';
       row.dataset.cid=item.id;
+      /* ITEM_NOTES 是套組內含項目，ITEM_DESCS 是單項備註，標題不同 */
+      const isPack=!!ITEM_NOTES[item.id];
       const notes=ITEM_NOTES[item.id]||ITEM_DESCS[item.id]||'';
 
       let priceEl;
@@ -3267,7 +3230,7 @@ function renderCart(){
       // Notes block for print
       const notesBlock = notes
         ? `<div class="cart-notes-print">
-             <div class="cart-notes-print-title">包含項目</div>
+             <div class="cart-notes-print-title">${isPack?'包含項目':'備註'}</div>
              ${notes.split('\n').map(l=>`• ${esc(l)}`).join('<br>')}
            </div>`
         : '';
@@ -3466,7 +3429,7 @@ document.getElementById('btnPrint').addEventListener('click',()=>{
    最後改版日期
    ★ 每次改版請一併更新這個日期，會顯示於首頁左下角與列印版頁尾
    ═══════════════════════════════════════════════════════════════════ */
-const APP_REVISION = '2026-09-20';
+const APP_REVISION = '2026-09-30';
 
 function renderAppRevision(){
   const el = document.getElementById('appRevision');
