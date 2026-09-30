@@ -687,6 +687,20 @@ body {
 .endo-sub-row.l3 .item-card.selected .check-dot { background: var(--gold) !important; }
 
 
+/* 自費內視鏡區內的次級分組標題（耗材），比分類大標輕，不搶視覺 */
+.endo-group-label {
+  grid-column: 1 / -1;
+  font-size: 12.5px; font-weight: 700; letter-spacing: 0.06em;
+  color: var(--muted); line-height: 1.6;
+  padding: 12px 4px 2px; margin-top: 4px;
+  border-top: 1px dashed var(--border);
+}
+/* 耗材列：獨立一列、欄寬較窄，五張並排不落單 */
+.endo-consum-row {
+  grid-column: 1 / -1;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: 12px;
+}
 .endo-sub-row {
   grid-column: 1 / -1; background: var(--accent-pale);
   border-radius: var(--radius-sm); padding: 10px 10px 8px; margin-bottom: 2px;
@@ -1795,7 +1809,12 @@ const ENDO_TREE = {
     {id:'en_sp_cp1',  name:'大腸鏡 + 瘜肉切除術(1-3個)',      desc:'使用拋棄式切除環，不含病理檢查',           price:5000},
     {id:'en_sp_cp2',  name:'大腸鏡 + 瘜肉切除術(4-9個)',      desc:'使用拋棄式切除環，不含病理檢查',           price:6000},
     {id:'en_sp_cp3',  name:'大腸鏡 + 瘜肉切除術(>10個)',      desc:'使用拋棄式切除環，不含病理檢查',           price:8500},
-    {id:'en_sp_path', name:'病理檢查費',                    desc:'每一項檢體',                               price:2000},
+    /* 耗材：視臨床需要使用，以件數計價（qty:true） */
+    {id:'en_sp_path',    name:'病理檢查費',        desc:'每一項檢體',              price:2000, qty:true},
+    {id:'en_sp_forceps', name:'切片鉗',            desc:'拋棄式，每支',            price:1000, qty:true},
+    {id:'en_sp_snare',   name:'切除環',            desc:'拋棄式，每個',            price:1000, qty:true},
+    {id:'en_sp_clip',    name:'止血夾',            desc:'每支',                    price:1000, qty:true},
+    {id:'en_sp_needle',  name:'注射針 + 止血藥物', desc:'每組',                    price:1500, qty:true},
   ]
 };
 
@@ -2797,22 +2816,32 @@ function buildEndoGrid(){
   spColon.forEach(function(sp){
     renderSpItem(grid,sp,SP_COLON_PREP,SP_COLON_SED);
   });
-  /* 病理檢查費：同一列累計件數（原本每件一列，列印會出現多行相同項目） */
-  var pathItem=ENDO_TREE.selfPay.find(function(sp){return sp.id==='en_sp_path';});
-  if(pathItem){
-    var pathRow=cart.find(function(x){return x.id===PATH_ID;});
-    var pathCount=pathRow?pathRow.qty:0;
-    var pc=document.createElement('div'); pc.className='item-card sp-card'+(pathCount>0?' selected':'');
-    pc.dataset.id=pathItem.id;  /* 啟用 hover 備註 */
-    /* 說明文字改置於備註；件數併入名稱，維持單行高度不因加選而變動 */
-    pc.innerHTML='<div class="mode-badge self">自費</div>'
-      +'<div class="item-name">'+esc(pathItem.name)+(pathCount>0?' ×'+pathCount:'')+'</div>'
-      +'<div class="item-price-row"><span class="price-currency">NT$</span><span class="price-val">'+fmtPrice(pathItem.price)+'</span></div>'
-      +'<div class="check-dot">✓</div>';
-    pc.onclick=function(e){ e.preventDefault(); changePathQty(+1); };
-    /* 右鍵減一件，不必回到清單刪除 */
-    pc.addEventListener('contextmenu',function(e){ e.preventDefault(); changePathQty(-1); });
-    grid.appendChild(pc);
+  /* ── 耗材：視臨床需要使用，以件數計價，自成一列 ── */
+  if(QTY_DEFS.length){
+    var conLabel=document.createElement('div');
+    conLabel.className='endo-group-label';
+    conLabel.textContent='耗材（視臨床需要使用，點一下加一件、右鍵減一件）';
+    grid.appendChild(conLabel);
+    /* 自成一列並用較窄的欄寬，五張才排得進同一行，不會落單一張在第二列 */
+    var conRow=document.createElement('div'); conRow.className='endo-consum-row';
+    grid.appendChild(conRow);
+    QTY_DEFS.forEach(function(def){
+      var row=cart.find(function(x){return x.id===def.id;});
+      var n=row?row.qty:0;
+      var c=document.createElement('div');
+      c.className='item-card sp-card'+(n>0?' selected':'');
+      c.dataset.id=def.id;  /* 啟用 hover 備註 */
+      /* 件數併入名稱，維持單行高度不因加選而變動 */
+      c.innerHTML='<div class="mode-badge self">自費</div>'
+        +'<div class="item-name">'+esc(def.name)+(n>0?' ×'+n:'')+'</div>'
+        +'<div class="item-price-row"><span class="price-currency">NT$</span><span class="price-val">'+fmtPrice(def.price)+'</span></div>'
+        +'<div class="check-dot">✓</div>';
+      (function(id){
+        c.onclick=function(e){ e.preventDefault(); changeQtyItem(id,+1); };
+        c.addEventListener('contextmenu',function(e){ e.preventDefault(); changeQtyItem(id,-1); });
+      })(def.id);
+      conRow.appendChild(c);
+    });
   }
 
   applyCardA11y();
@@ -3037,17 +3066,19 @@ function toggleSpL3(spItem,l3obj){
    ═══════════════════════════════════════════════════════════════════ */
 /* 健檢 A-E 互斥群組（同時只能選一項） */
 /* ═══════════════════════════════════════════════════════════════════
-   病理檢查費：以件數累計於同一列
-   原本每按一次就新增一列（id 帶時間戳），列印時會出現多行相同項目。
+   內視鏡耗材：以件數累計於同一列
+   同一項按多次只會累加件數，不會產生多列相同項目（列印才不會重複好幾行）。
    ═══════════════════════════════════════════════════════════════════ */
-const PATH_ID='en_sp_path';
-function changePathQty(delta){
-  const def=ENDO_TREE.selfPay.find(s=>s.id===PATH_ID);
+const QTY_DEFS = ENDO_TREE.selfPay.filter(s=>s.qty);
+const QTY_IDS  = new Set(QTY_DEFS.map(s=>s.id));
+
+function changeQtyItem(id, delta){
+  const def=ENDO_TREE.selfPay.find(s=>s.id===id);
   if(!def) return;
-  const idx=cart.findIndex(x=>x.id===PATH_ID);
+  const idx=cart.findIndex(x=>x.id===id);
   if(idx===-1){
     if(delta<=0) return;
-    cart.push({id:PATH_ID,name:def.name,catLabel:'內視鏡',
+    cart.push({id:id,name:def.name,catLabel:'內視鏡',
                qty:1,unitPrice:def.price,price:def.price,mode:'self',priceEdited:false});
     showToast('✓ 已加入：'+def.name);
   } else {
@@ -3270,7 +3301,7 @@ function renderCart(){
       // 件數加減
       row.querySelectorAll('.qty-btn').forEach(b=>b.addEventListener('click',e=>{
         e.stopPropagation();
-        if(item.id===PATH_ID) changePathQty(parseInt(e.currentTarget.dataset.qty,10));
+        if(QTY_IDS.has(item.id)) changeQtyItem(item.id, parseInt(e.currentTarget.dataset.qty,10));
       }));
 
       row.querySelector('.cart-remove-btn').addEventListener('click',e=>removeItem(e.currentTarget.dataset.id));
