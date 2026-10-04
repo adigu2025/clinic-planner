@@ -3373,61 +3373,125 @@ function renderCart(){
    重複計費提示（僅供櫃檯確認，不列印）
    健檢 D／E 方案內容已含麻醉腸胃鏡，若又在內視鏡區另加自費項目會重複收費。
    ═══════════════════════════════════════════════════════════════════ */
-/* 健檢方案已內含、但也能單獨加選的項目。兩邊都選就會重複收費。
-   A：腹超、甲狀腺超音波、TANITA
-   B 起：加頸動脈超音波、心電圖
-   C 起：加 11 項癌指標（對應完整腫瘤指標 男／女） */
-/* A 方案內含的生化／尿液檢驗，每一項在「檢驗」分類都能單獨加選 */
-const HC_LAB_A = [
-  'lb_01001', /* AC Sugar 飯前血糖 */
-  'lb_03001', /* HbA1C 醣化血色素 */
-  'lb_01011', /* AST (GOT) */
-  'lb_01012', /* ALT (GPT) */
-  'lb_01008', /* BUN 血中尿素氮 */
-  'lb_01010', /* Cr 肌酸肝 */
-  'lb_01009', /* UA 尿酸 */
-  'lb_01004', /* TC 總膽固醇 */
-  'lb_01003', /* TG 中性脂肪 */
-  'lb_01005', /* HDL */
-  'lb_01006', /* LDL */
-  'lb_04003', /* TSH */
-  'lb_04004', /* Free T4 */
-  'lb_09001'  /* Urine Routine 尿一般檢查 */
-];
-const HC_EXAMS_A = ['ex1','ex2','ex5'];                         /* 腹超、甲狀腺超音波、TANITA */
-const HC_A = HC_LAB_A.concat(HC_EXAMS_A);
-const HC_B = HC_A.concat(['lb_01007','ex3','ex4']);             /* 脂蛋白(a)、頸動脈超音波、心電圖 */
-const HC_C = HC_B.concat(['lb16','lb18']);                      /* 11 項癌指標（男／女） */
-const HC_INCLUDED = { hc1:HC_A, hc2:HC_B, hc3:HC_C, hc4:HC_C, hc5:HC_C };
+/* ─ 成分代號 → 可單獨加選的品項 id ─────────────────────────────────
+   只收錄在「檢驗／檢查」分類中真的能單選的品項。
+   找不到對應單選品項者一律不納入（CBC 的 DC 分類計數、TC/HDL 比值、
+   Total Protein、progesterone、prostaglandin 等），寧可少提醒也不誤報。 */
+const P = {
+  acSugar:'lb_01001', hba1c:'lb_03001', insulin:'lb_03002',   /* HOMA-IR 需測胰島素 */
+  ast:'lb_01011', alt:'lb_01012', bun:'lb_01008', cr:'lb_01010', ua:'lb_01009',
+  tc:'lb_01004', tg:'lb_01003', hdl:'lb_01005', ldl:'lb_01006', lpa:'lb_01007',
+  tbil:'lb_01015', dbil:'lb_01016', alkp:'lb_01014', rgt:'lb_01013',
+  alb:'lb_01018', glob:'lb_01019', amylase:'lb_01021', cpk:'lb_01023',
+  tsh:'lb_04003', ft4:'lb_04004', t3:'lb_04001',
+  urine:'lb_09001', microalb:'lb_09004', ucr:'lb_09005',
+  cbc:'lb_10001', fe:'lb_11001', tibc:'lb_11002', ferritin:'lb_11006',
+  hbsag:'lb_02006', hbsab:'lb_02007', hcv:'lb_02014',
+  hscrp:'lb_13003', homocys:'lb_13004', probnp:'lb_13005',
+  fsh:'lb_17010', lh:'lb_17011', e2:'lb_17012', cortisol:'lb_17005',
+  zn:'lb_12011', vitd:'lb_25003',
+  hiv:'lb_21003', gono:'lb_21015', vdrl:'lb_21001', tpha:'lb_21002',
+  hsv1:'lb_21008', hsv2:'lb_21009', chlaIgG:'lb_21005', chlaDNA:'lb_21013',
+  cea:'lb_06009', afp:'lb_06008', ca125:'lb_06012', ca153:'lb_06013',
+  ca199:'lb_06014', scc:'lb_06015', cyfra:'lb_06006', ca724:'lb_06003',
+  progrp:'lb_06004', bhcg:'lb_06010', vcaIgA:'lb_06019',
+  psa:'lb_07001', fpsa:'lb_07002'
+};
+
+/* 癌指標：健檢 C 方案起含「11 項癌指標」，但男女套組內容不同。
+   取男女共通的部分，才不會對男性誤報 CA125／CA153。 */
+const TUMOR_COMMON = [P.cea,P.afp,P.ca199,P.scc,P.cyfra,P.ca724,P.progrp,P.bhcg,P.vcaIgA];
+
+/* ─ 套組／方案 → 成分（展開後才能跨套組比對重複）─────────────────── */
+const PANEL_PARTS = {
+  /* 檢驗套組 */
+  lb01:[P.acSugar,P.ast,P.alt,P.bun,P.cr,P.ua,P.tc,P.tg,P.hdl,P.ldl,P.urine],
+  lb02:[P.cbc,P.acSugar,P.hba1c,P.ast,P.alt,P.bun,P.cr,P.ua,P.tc,P.tg,P.hdl,P.ldl,P.urine],
+  lb03:[P.cbc,P.acSugar,P.hba1c,P.ast,P.alt,P.tbil,P.dbil,P.alkp,P.rgt,P.alb,P.glob,P.amylase,
+        P.bun,P.cr,P.ua,P.tc,P.tg,P.hdl,P.ldl,P.urine],
+  lb04:[P.cbc,P.acSugar,P.hba1c,P.ast,P.alt,P.hbsag,P.hbsab,P.hcv,
+        P.bun,P.cr,P.ua,P.tc,P.tg,P.hdl,P.ldl,P.urine],
+  lb05:[P.hbsag,P.hbsab,P.hcv],
+  lb06:[P.acSugar,P.hba1c,P.insulin,P.ast,P.alt,P.bun,P.cr,P.ua,
+        P.tc,P.tg,P.hdl,P.ldl,P.tsh,P.ft4],
+  lb07:[P.acSugar,P.hba1c,P.insulin,P.bun,P.cr,P.microalb,P.ucr],
+  lb08:[P.microalb,P.ucr],
+  lb09:[P.cbc,P.fe,P.tibc],
+  lb10:[P.acSugar,P.tc,P.tg,P.hdl,P.ldl,P.hscrp,P.homocys,P.probnp,P.cpk],
+  lb11:[P.t3,P.ft4,P.tsh],
+  lb12:[P.fsh,P.lh,P.e2,P.tsh,P.chlaIgG],
+  lb13:[P.hiv,P.gono,P.vdrl,P.hsv1,P.hsv2,P.tpha,P.chlaDNA],
+  lb14:[P.alb,P.zn,P.ferritin,P.cortisol,P.vitd,P.homocys,P.tsh,P.ft4],
+  lb15:[P.cea,P.afp,P.ca125,P.ca153,P.ca199,P.scc,P.cyfra],
+  lb16:[P.cea,P.afp,P.ca125,P.ca153,P.ca199,P.scc,P.cyfra,P.ca724,P.progrp,P.bhcg,P.vcaIgA],
+  lb17:[P.cea,P.afp,P.ca199,P.psa,P.scc,P.cyfra],
+  lb18:[P.cea,P.afp,P.ca199,P.psa,P.scc,P.cyfra,P.ca724,P.progrp,P.bhcg,P.fpsa,P.vcaIgA]
+};
+/* 健檢方案：生化／尿液 + 影像與功能檢查 */
+const HC_LAB_A = [P.acSugar,P.hba1c,P.insulin,P.ast,P.alt,P.bun,P.cr,P.ua,
+                  P.tc,P.tg,P.hdl,P.ldl,P.tsh,P.ft4,P.urine];
+PANEL_PARTS.hc1 = HC_LAB_A.concat(['ex1','ex2','ex5']);              /* 腹超、甲狀腺超音波、TANITA */
+PANEL_PARTS.hc2 = PANEL_PARTS.hc1.concat([P.lpa,'ex3','ex4']);       /* 脂蛋白(a)、頸動脈超音波、心電圖 */
+PANEL_PARTS.hc3 = PANEL_PARTS.hc2.concat(TUMOR_COMMON);
+PANEL_PARTS.hc4 = PANEL_PARTS.hc3;
+PANEL_PARTS.hc5 = PANEL_PARTS.hc3;
+
 const HC_WITH_ENDO = { hc4:'D 方案', hc5:'E 方案' };
+
+/* id → 品項定義，供顯示重複成分的名稱 */
+const ITEM_BY_ID = (function(){
+  const m={};
+  CATEGORIES.forEach(c=>c.items.forEach(i=>{ if(!i.type) m[i.id]=i; }));
+  return m;
+})();
+
+function dupList(names){
+  return names.length>4
+    ? names.slice(0,3).join('、')+' 等 '+names.length+' 項'
+    : names.join('、');
+}
 
 function renderConflictWarning(){
   const box=document.getElementById('warnBlock');
   if(!box) return;
   box.innerHTML='';
-  /* 健檢方案互斥，清單中最多一個 */
-  const hc=cart.find(c=>HC_INCLUDED[c.id]);
-  if(!hc) return;
+  /* 免自費項目價格為 0，不構成重複收費 */
+  const items=cart.filter(c=>c.mode!=='ins');
+  const isPanel=id=>!!PANEL_PARTS[id];
   const warns=[];
 
-  /* 與單選項目重複（超音波、心電圖、TANITA、腫瘤指標） */
-  const dup=cart.filter(c=>c.mode!=='ins'&&HC_INCLUDED[hc.id].indexOf(c.id)!==-1);
-  if(dup.length){
+  /* ① 套組／方案 已包含清單中的某個單選項目 */
+  items.forEach(p=>{
+    if(!isPanel(p.id)) return;
+    const parts=PANEL_PARTS[p.id];
+    const dup=items.filter(x=>x!==p&&!isPanel(x.id)&&parts.indexOf(x.id)!==-1);
+    if(!dup.length) return;
     const sum=dup.reduce((s,x)=>s+(x.price||0),0);
-    /* 重複項目可能多達十幾項，超過 4 項就只列前 3 項，避免提示變成一大段文字 */
-    const names=dup.map(x=>esc(x.name));
-    const list=names.length>4
-      ? names.slice(0,3).join('、')+' 等 '+names.length+' 項'
-      : names.join('、');
-    warns.push(esc(hc.name)+'已包含 '+list+'，目前重複計入 NT$ '+fmtPrice(sum)+'。');
+    warns.push(esc(p.name)+'已包含 '+dupList(dup.map(x=>esc(x.name)))
+      +'，目前重複計入 NT$ '+fmtPrice(sum)+'。');
+  });
+
+  /* ② 兩個套組／方案之間的成分重複 */
+  for(let i=0;i<items.length;i++){
+    if(!isPanel(items[i].id)) continue;
+    for(let j=i+1;j<items.length;j++){
+      if(!isPanel(items[j].id)) continue;
+      const a=PANEL_PARTS[items[i].id], b=PANEL_PARTS[items[j].id];
+      const shared=a.filter(x=>b.indexOf(x)!==-1);
+      if(!shared.length) continue;
+      const names=shared.map(id=>ITEM_BY_ID[id]?esc(ITEM_BY_ID[id].name):id);
+      warns.push(esc(items[i].name)+' 與 '+esc(items[j].name)+' 內容重複：'
+        +dupList(names)+'，請確認是否兩者都需要。');
+    }
   }
 
-  /* D／E 方案已含麻醉腸胃鏡 */
-  if(HC_WITH_ENDO[hc.id]){
-    const endoSelf=cart.filter(c=>c.catLabel==='內視鏡'&&c.mode!=='ins'&&(c.price||0)>0);
+  /* ③ D／E 方案已含麻醉腸胃鏡 */
+  const hcEndo=items.find(c=>HC_WITH_ENDO[c.id]);
+  if(hcEndo){
+    const endoSelf=items.filter(c=>c.catLabel==='內視鏡'&&(c.price||0)>0);
     if(endoSelf.length){
       const sum=endoSelf.reduce((s,x)=>s+(x.price||0),0);
-      warns.push(esc(hc.name)+'已包含麻醉腸胃鏡，清單中另有 '+endoSelf.length
+      warns.push(esc(hcEndo.name)+'已包含麻醉腸胃鏡，清單中另有 '+endoSelf.length
         +' 項內視鏡自費費用，合計 NT$ '+fmtPrice(sum)+'。');
     }
   }
