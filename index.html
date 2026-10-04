@@ -3377,10 +3377,28 @@ function renderCart(){
    A：腹超、甲狀腺超音波、TANITA
    B 起：加頸動脈超音波、心電圖
    C 起：加 11 項癌指標（對應完整腫瘤指標 男／女） */
-const HC_EXAMS_A = ['ex1','ex2','ex5'];
-const HC_EXAMS_B = HC_EXAMS_A.concat(['ex3','ex4']);
-const HC_EXAMS_C = HC_EXAMS_B.concat(['lb16','lb18']);
-const HC_INCLUDED = { hc1:HC_EXAMS_A, hc2:HC_EXAMS_B, hc3:HC_EXAMS_C, hc4:HC_EXAMS_C, hc5:HC_EXAMS_C };
+/* A 方案內含的生化／尿液檢驗，每一項在「檢驗」分類都能單獨加選 */
+const HC_LAB_A = [
+  'lb_01001', /* AC Sugar 飯前血糖 */
+  'lb_03001', /* HbA1C 醣化血色素 */
+  'lb_01011', /* AST (GOT) */
+  'lb_01012', /* ALT (GPT) */
+  'lb_01008', /* BUN 血中尿素氮 */
+  'lb_01010', /* Cr 肌酸肝 */
+  'lb_01009', /* UA 尿酸 */
+  'lb_01004', /* TC 總膽固醇 */
+  'lb_01003', /* TG 中性脂肪 */
+  'lb_01005', /* HDL */
+  'lb_01006', /* LDL */
+  'lb_04003', /* TSH */
+  'lb_04004', /* Free T4 */
+  'lb_09001'  /* Urine Routine 尿一般檢查 */
+];
+const HC_EXAMS_A = ['ex1','ex2','ex5'];                         /* 腹超、甲狀腺超音波、TANITA */
+const HC_A = HC_LAB_A.concat(HC_EXAMS_A);
+const HC_B = HC_A.concat(['lb_01007','ex3','ex4']);             /* 脂蛋白(a)、頸動脈超音波、心電圖 */
+const HC_C = HC_B.concat(['lb16','lb18']);                      /* 11 項癌指標（男／女） */
+const HC_INCLUDED = { hc1:HC_A, hc2:HC_B, hc3:HC_C, hc4:HC_C, hc5:HC_C };
 const HC_WITH_ENDO = { hc4:'D 方案', hc5:'E 方案' };
 
 function renderConflictWarning(){
@@ -3396,8 +3414,12 @@ function renderConflictWarning(){
   const dup=cart.filter(c=>c.mode!=='ins'&&HC_INCLUDED[hc.id].indexOf(c.id)!==-1);
   if(dup.length){
     const sum=dup.reduce((s,x)=>s+(x.price||0),0);
-    warns.push(esc(hc.name)+'已包含 '+dup.map(x=>esc(x.name)).join('、')
-      +'，目前重複計入 NT$ '+fmtPrice(sum)+'。');
+    /* 重複項目可能多達十幾項，超過 4 項就只列前 3 項，避免提示變成一大段文字 */
+    const names=dup.map(x=>esc(x.name));
+    const list=names.length>4
+      ? names.slice(0,3).join('、')+' 等 '+names.length+' 項'
+      : names.join('、');
+    warns.push(esc(hc.name)+'已包含 '+list+'，目前重複計入 NT$ '+fmtPrice(sum)+'。');
   }
 
   /* D／E 方案已含麻醉腸胃鏡 */
