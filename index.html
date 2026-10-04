@@ -1727,7 +1727,7 @@ const CATEGORIES = [
       { id:'ex_g6', name:'超音波導引 + 腹腔穿刺 + 腹腔液體分析', desc:'', price:2400 },
       { id:'ex_g7', name:'超音波導引 + 甲狀腺穿刺 + 薄片細胞學檢查', desc:'', price:3300 },
       { id:'ex_so', type:'section', name:'其他檢查' },
-      { id:'ex4', name:'心電圖', desc:'基礎的心臟狀態篩檢', price:150 },
+      { id:'ex4', name:'心電圖', desc:'基礎的心臟狀態篩檢', price:300 },
       { id:'ex5', name:'TANITA身體組成', desc:'了解身體組成與平衡狀態', price:500 },
     
     ]
@@ -3373,19 +3373,48 @@ function renderCart(){
    重複計費提示（僅供櫃檯確認，不列印）
    健檢 D／E 方案內容已含麻醉腸胃鏡，若又在內視鏡區另加自費項目會重複收費。
    ═══════════════════════════════════════════════════════════════════ */
+/* 健檢方案已內含、但也能單獨加選的項目。兩邊都選就會重複收費。
+   A：腹超、甲狀腺超音波、TANITA
+   B 起：加頸動脈超音波、心電圖
+   C 起：加 11 項癌指標（對應完整腫瘤指標 男／女） */
+const HC_EXAMS_A = ['ex1','ex2','ex5'];
+const HC_EXAMS_B = HC_EXAMS_A.concat(['ex3','ex4']);
+const HC_EXAMS_C = HC_EXAMS_B.concat(['lb16','lb18']);
+const HC_INCLUDED = { hc1:HC_EXAMS_A, hc2:HC_EXAMS_B, hc3:HC_EXAMS_C, hc4:HC_EXAMS_C, hc5:HC_EXAMS_C };
 const HC_WITH_ENDO = { hc4:'D 方案', hc5:'E 方案' };
+
 function renderConflictWarning(){
   const box=document.getElementById('warnBlock');
   if(!box) return;
   box.innerHTML='';
-  const hcItem=cart.find(c=>HC_WITH_ENDO[c.id]);
-  const endoSelf=cart.filter(c=>c.catLabel==='內視鏡'&&c.mode!=='ins'&&(c.price||0)>0);
-  if(!hcItem||!endoSelf.length) return;
+  /* 健檢方案互斥，清單中最多一個 */
+  const hc=cart.find(c=>HC_INCLUDED[c.id]);
+  if(!hc) return;
+  const warns=[];
+
+  /* 與單選項目重複（超音波、心電圖、TANITA、腫瘤指標） */
+  const dup=cart.filter(c=>c.mode!=='ins'&&HC_INCLUDED[hc.id].indexOf(c.id)!==-1);
+  if(dup.length){
+    const sum=dup.reduce((s,x)=>s+(x.price||0),0);
+    warns.push(esc(hc.name)+'已包含 '+dup.map(x=>esc(x.name)).join('、')
+      +'，目前重複計入 NT$ '+fmtPrice(sum)+'。');
+  }
+
+  /* D／E 方案已含麻醉腸胃鏡 */
+  if(HC_WITH_ENDO[hc.id]){
+    const endoSelf=cart.filter(c=>c.catLabel==='內視鏡'&&c.mode!=='ins'&&(c.price||0)>0);
+    if(endoSelf.length){
+      const sum=endoSelf.reduce((s,x)=>s+(x.price||0),0);
+      warns.push(esc(hc.name)+'已包含麻醉腸胃鏡，清單中另有 '+endoSelf.length
+        +' 項內視鏡自費費用，合計 NT$ '+fmtPrice(sum)+'。');
+    }
+  }
+
+  if(!warns.length) return;
   const div=document.createElement('div');
   div.className='warn-block';
   div.innerHTML='<div class="warn-title">請確認是否重複計費</div>'
-    +'<div class="warn-text">'+esc(HC_WITH_ENDO[hcItem.id])
-    +'已包含麻醉腸胃鏡，清單中另有 '+endoSelf.length+' 項內視鏡自費費用。</div>';
+    + warns.map(w=>'<div class="warn-text">'+w+'</div>').join('');
   box.appendChild(div);
 }
 
