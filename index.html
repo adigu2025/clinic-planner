@@ -1119,7 +1119,7 @@ body.doc-max #screen-doc .screen-nav { display: none; }
           <span><kbd>←</kbd><kbd>→</kbd> 換項目</span>
           <span><kbd>+</kbd><kbd>-</kbd> 縮放</span>
           <span><kbd>F</kbd> 最大化</span>
-          <span>右鍵列印</span>
+          <span>右鍵列印／複製／另存</span>
           <span><kbd>Esc</kbd> 返回</span>
         </div>
       </div>
@@ -3575,7 +3575,7 @@ document.getElementById('btnPrint').addEventListener('click',()=>{
    最後改版日期
    ★ 每次改版請一併更新這個日期，會顯示於首頁左下角與列印版頁尾
    ═══════════════════════════════════════════════════════════════════ */
-const APP_REVISION = '2026-10-04';
+const APP_REVISION = '2026-10-05';
 
 function renderAppRevision(){
   const el = document.getElementById('appRevision');
@@ -4187,6 +4187,38 @@ function printDocItem(pageIdx){
   }
 }
 
+/* ─── 複製圖片／另存圖片 ────────────────────────────────────────────
+   另存：直接下載原始圖檔，不經過 canvas。
+   複製：fetch 取得原始圖檔 bytes 後寫入剪貼簿，同樣不經過 canvas——
+   本機以 file:// 開啟時，canvas 讀取跨「檔案」的圖片像素會被瀏覽器視為
+   tainted 而擋下，fetch 同一份檔案則不受此限制。
+   ─────────────────────────────────────────────────────────────────── */
+function docImageFileName(item,pageIdx){
+  const src=item.pages[pageIdx];
+  const ext=(src.split('.').pop()||'jpg').toLowerCase();
+  const n=item.pages.length;
+  return currentDoc.label+'_'+item.label+(n>1?'_第'+(pageIdx+1)+'頁':'')+'.'+ext;
+}
+function saveDocImage(pageIdx){
+  const item=currentDoc && currentDoc.items[docIdx];
+  if(!item) return;
+  const a=document.createElement('a');
+  a.href=item.pages[pageIdx];
+  a.download=docImageFileName(item,pageIdx);
+  document.body.appendChild(a); a.click(); a.remove();
+}
+async function copyDocImage(pageIdx){
+  const item=currentDoc && currentDoc.items[docIdx];
+  if(!item) return;
+  if(!navigator.clipboard || !window.ClipboardItem){ showToast('此瀏覽器不支援複製圖片'); return; }
+  try{
+    const res=await fetch(item.pages[pageIdx]);
+    const blob=await res.blob();
+    await navigator.clipboard.write([new ClipboardItem({[blob.type||'image/jpeg']:blob})]);
+    showToast('已複製圖片到剪貼簿');
+  }catch(err){ showToast('複製失敗：'+err.message); }
+}
+
 function closeDocMenu(){
   const old=document.getElementById('docCtxMenu');
   if(old) old.remove();
@@ -4205,11 +4237,24 @@ function showDocMenu(e){
     b.onclick=()=>{ closeDocMenu(); fn(); };
     menu.appendChild(b);
   };
+  const sep=()=>{ const s=document.createElement('div'); s.className='doc-ctx-sep'; menu.appendChild(s); };
   const n=item.pages.length;
   add(n>1 ? `列印這一份（${n} 頁）` : '列印這一份', ()=>printDocItem());
   if(n>1){
-    const sep=document.createElement('div'); sep.className='doc-ctx-sep'; menu.appendChild(sep);
+    sep();
     item.pages.forEach((_,i)=>add('只印第 '+(i+1)+' 頁', ()=>printDocItem(i)));
+  }
+  sep();
+  if(n>1){
+    item.pages.forEach((_,i)=>add('複製第 '+(i+1)+' 頁的圖片', ()=>copyDocImage(i)));
+  } else {
+    add('複製圖片', ()=>copyDocImage(0));
+  }
+  sep();
+  if(n>1){
+    item.pages.forEach((_,i)=>add('另存第 '+(i+1)+' 頁為圖片', ()=>saveDocImage(i)));
+  } else {
+    add('另存圖片', ()=>saveDocImage(0));
   }
   document.body.appendChild(menu);
   const r=menu.getBoundingClientRect();
