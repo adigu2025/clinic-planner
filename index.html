@@ -3575,7 +3575,7 @@ document.getElementById('btnPrint').addEventListener('click',()=>{
    最後改版日期
    ★ 每次改版請一併更新這個日期，會顯示於首頁左下角與列印版頁尾
    ═══════════════════════════════════════════════════════════════════ */
-const APP_REVISION = '2026-10-05';
+const APP_REVISION = '2026-10-06';
 
 function renderAppRevision(){
   const el = document.getElementById('appRevision');
@@ -3887,7 +3887,10 @@ const DOC_SETS = [
   { id:'docs', label:'說明文件', desc:'診間說明與費用明細',
     items:[
       { label:'腸胃鏡費用明細', pages:['img/doc-endoscopy-fee.jpg'] },
-      { label:'檢測幽門桿菌',   pages:['img/doc-hp-test.jpg'] }
+      { label:'檢測幽門桿菌',   pages:['img/doc-hp-test.jpg'] },
+      { label:'腹部超音波衛教', pages:['img/doc-abdominal-us-1.jpg','img/doc-abdominal-us-2.jpg'] },
+      { label:'傷口處理衛教',   pages:['img/doc-wound-care-1.jpg','img/doc-wound-care-2.jpg'] },
+      { label:'頭部傷口衛教',   pages:['img/doc-head-injury-1.jpg','img/doc-head-injury-2.jpg'] }
     ]
   },
   { id:'consent', label:'同意書', desc:'檢查與治療同意書',
@@ -3896,6 +3899,7 @@ const DOC_SETS = [
       { label:'大腸鏡',     pages:['img/consent-colonoscopy-1.jpg','img/consent-colonoscopy-2.jpg'] },
       { label:'膠囊內視鏡', pages:['img/consent-capsule-1.jpg','img/consent-capsule-2.jpg'] },
       { label:'輕中度鎮靜', pages:['img/consent-sedation-1.jpg','img/consent-sedation-2.jpg'] },
+      { label:'麻醉同意書', pages:['img/consent-anesthesia-1.jpg','img/consent-anesthesia-2.jpg','img/consent-anesthesia-3.jpg'] },
       { label:'冷凝刀',     pages:['img/consent-het-1.jpg','img/consent-het-2.jpg'] },
       { label:'甲狀腺穿刺', pages:['img/consent-thyroid-fna-1.jpg'] }
     ]
