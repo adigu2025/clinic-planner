@@ -3575,7 +3575,7 @@ document.getElementById('btnPrint').addEventListener('click',()=>{
    最後改版日期
    ★ 每次改版請一併更新這個日期，會顯示於首頁左下角與列印版頁尾
    ═══════════════════════════════════════════════════════════════════ */
-const APP_REVISION = '2026-10-11';
+const APP_REVISION = '2026-10-15';
 
 function renderAppRevision(){
   const el = document.getElementById('appRevision');
@@ -3887,10 +3887,7 @@ const DOC_SETS = [
   { id:'docs', label:'說明文件', desc:'診間說明與費用明細',
     items:[
       { label:'腸胃鏡費用明細', pages:['img/doc-endoscopy-fee.jpg'] },
-      { label:'檢測幽門桿菌',   pages:['img/doc-hp-test.jpg'] },
-      { label:'腹部超音波衛教', pages:['img/doc-abdominal-us-1.jpg','img/doc-abdominal-us-2.jpg'] },
-      { label:'傷口處理衛教',   pages:['img/doc-wound-care-1.jpg','img/doc-wound-care-2.jpg'] },
-      { label:'頭部傷口衛教',   pages:['img/doc-head-injury-1.jpg','img/doc-head-injury-2.jpg'] }
+      { label:'檢測幽門桿菌',   pages:['img/doc-hp-test.jpg'] }
     ]
   },
   { id:'consent', label:'同意書', desc:'檢查與治療同意書',
